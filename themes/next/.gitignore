@@ -3,7 +3,7 @@
 *.log
 *.iml
 yarn.lock
-# package-lock.json
+package-lock.json
 node_modules/
 
 # Ignore optional external libraries
