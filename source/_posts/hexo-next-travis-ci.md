@@ -413,6 +413,10 @@ env:
 
 ## 将文件推送到 dev 分支
 
+{% note warning %}
+推送到远程分之前，建议删除 themes/next 下的 .git 文件夹和 .gitignore 文件
+{% endnote %}
+
 给本地仓库添加 dev 分支
 {% codeblock %}
 $ git checkout -b dev1
@@ -423,5 +427,7 @@ $ git checkout -b dev1
 $ git push --force -u origin dev
 {% endcodeblock %}
 
-推送上去之后图下图
+推送上去之后文件目录，如下图
 {% asset_img github-dev.png %}
+
+**最后在 travis 上就可以看到部署你的博客到 github pages 的日志**
