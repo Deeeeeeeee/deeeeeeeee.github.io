@@ -7,3 +7,5 @@ tags:
   - union-find
 date: 2018-02-26 23:52:32
 ---
+
+{% asset_img union-find.gif %}
