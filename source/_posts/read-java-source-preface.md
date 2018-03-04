@@ -1,9 +1,11 @@
 ---
 title: 阅读源码系列--双重校验锁
 categories:
-  - null
+  - 阅读源码
 tags:
-  - null
+  - jdk
+  - double-check
+  - lock
 date: 2018-02-27 22:46:00
 ---
 
