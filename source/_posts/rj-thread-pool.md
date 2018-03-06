@@ -195,24 +195,179 @@ execute 方法负责创建线程和安排任务，可以说是一个调度者，
             reject(command);
     }
 ```
+execute 方法做的是添加工人或将任务添加到工作队列中。其中的逻辑如下：
+- 如果工人数量小于核心线程数量，则添加工人，并将任务作为初始任务给这个工人
+- 否则将任务添加到工作队列中（workQueue.offer(command)），并做二次校验（校验是否应该添加工人）
+- 尝试添加核心线程数以外的工人，如果仍失败，则拒绝本次任务的提交
 
-未完待续...
+看到这里，是不是觉得几行代码就将核心工程完成了！那么，任务交给谁去完成了呢？这就需要看一下内部类 Worker 了，所以**真正干活的是工人**。
+
+## 工人 Worker
+首先看一下工人的日常生活
+
+{% note info %}
+此处应有动画 \[捂脸\]，然而我的前端技术限制了我的想法。总之，工人就是不断地从任务队列中获取任务，然后不断地完成任务。
+{% endnote %}
+
+```java
+private final class Worker
+    extends AbstractQueuedSynchronizer
+    implements Runnable
+{
+    ...
+    /** Thread this worker is running in.  Null if factory fails. */
+    final Thread thread;
+    /** Initial task to run.  Possibly null. */
+    Runnable firstTask;
+
+    Worker(Runnable firstTask) {
+        setState(-1); // inhibit interrupts until runWorker
+        this.firstTask = firstTask;
+        this.thread = getThreadFactory().newThread(this);
+    }
+
+    /** Delegates main run loop to outer runWorker  */
+    public void run() {
+        runWorker(this);
+    }
+
+    public void lock()        { acquire(1); }
+    public void unlock()      { release(1); }
+    ...
+}
+
+final void runWorker(Worker w) {
+    Thread wt = Thread.currentThread();
+    Runnable task = w.firstTask;
+    w.firstTask = null;
+    w.unlock(); // allow interrupts
+    boolean completedAbruptly = true;
+    try {
+        while (task != null || (task = getTask()) != null) {
+            w.lock();
+            // If pool is stopping, ensure thread is interrupted;
+            // if not, ensure thread is not interrupted.  This
+            // requires a recheck in second case to deal with
+            // shutdownNow race while clearing interrupt
+            if ((runStateAtLeast(ctl.get(), STOP) ||
+                    (Thread.interrupted() &&
+                    runStateAtLeast(ctl.get(), STOP))) &&
+                !wt.isInterrupted())
+                wt.interrupt();
+            try {
+                beforeExecute(wt, task);
+                Throwable thrown = null;
+                try {
+                    task.run();
+                } catch (RuntimeException x) {
+                    thrown = x; throw x;
+                } catch (Error x) {
+                    thrown = x; throw x;
+                } catch (Throwable x) {
+                    thrown = x; throw new Error(x);
+                } finally {
+                    afterExecute(task, thrown);
+                }
+            } finally {
+                task = null;
+                w.completedTasks++;
+                w.unlock();
+            }
+        }
+        completedAbruptly = false;
+    } finally {
+        processWorkerExit(w, completedAbruptly);
+    }
+} 
+
+```
+
+由于想简单说说这个 Worker 的日常，所以只截取其中一段代码。
+- 首先，worker 有两个重要的变量，thread 和 firstTask。
+- Worker 构造函数中，可以看出，thread 还是 worker 自身，firstTask 是构造时候赋值的，表示第一个任务。
+- 除了构造方法，还有一个方法是 run 方法，run 方法调用了 runWorker 方法。
+- runWorker 方法，就是在 worker 线程中，不停地 getTask，然后去调用获取到的任务的 run 方法。也就相当于不停地干着获取到的任务。
+
+那么 worker 又是什么时候开始工作的呢？也就是什么时候开始执行自身的 run 方法的？这就要看上面 excute 方法里面调用的 addWorker 方法。
+
+```java
+private boolean addWorker(Runnable firstTask, boolean core) {
+    retry:
+    for (;;) {
+        int c = ctl.get();
+        int rs = runStateOf(c);
+
+        // Check if queue empty only if necessary.
+        if (rs >= SHUTDOWN &&
+            ! (rs == SHUTDOWN &&
+                firstTask == null &&
+                ! workQueue.isEmpty()))
+            return false;
+
+        for (;;) {
+            int wc = workerCountOf(c);
+            if (wc >= CAPACITY ||
+                wc >= (core ? corePoolSize : maximumPoolSize))
+                return false;
+            if (compareAndIncrementWorkerCount(c))
+                break retry;
+            c = ctl.get();  // Re-read ctl
+            if (runStateOf(c) != rs)
+                continue retry;
+            // else CAS failed due to workerCount change; retry inner loop
+        }
+    }
+
+    boolean workerStarted = false;
+    boolean workerAdded = false;
+    Worker w = null;
+    try {
+        w = new Worker(firstTask);
+        final Thread t = w.thread;
+        if (t != null) {
+            final ReentrantLock mainLock = this.mainLock;
+            mainLock.lock();
+            try {
+                // Recheck while holding lock.
+                // Back out on ThreadFactory failure or if
+                // shut down before lock acquired.
+                int rs = runStateOf(ctl.get());
+
+                if (rs < SHUTDOWN ||
+                    (rs == SHUTDOWN && firstTask == null)) {
+                    if (t.isAlive()) // precheck that t is startable
+                        throw new IllegalThreadStateException();
+                    workers.add(w);
+                    int s = workers.size();
+                    if (s > largestPoolSize)
+                        largestPoolSize = s;
+                    workerAdded = true;
+                }
+            } finally {
+                mainLock.unlock();
+            }
+            if (workerAdded) {
+                t.start();
+                workerStarted = true;
+            }
+        }
+    } finally {
+        if (! workerStarted)
+            addWorkerFailed(w);
+    }
+    return workerStarted;
+}
+```
+
+addWorker 方法只干两件事情
+- 在条件允许的情况下，添加工人
+- 让工人开始干活（t.start()）
+
+好了，到这里，主要的流程都明白了，当然，还有异常处理等流程还没有看。那么有几个问题，如果当多个线程同时去获取一个任务的时候怎么处理？怎么保证线程池中的工人数量跟预期的是一样的？（比如，你认为有 10 个工人，实际可能有1000个线程）当任务失败了，是怎么处理工人的呢？...
+
+## 防止争抢任务
+当多个线程同时获取一个任务的时候...未完待续...
 
 <!-- ThreadPool 的 defaultThreadFactory 创建的线程是同一个 ThreadGroup 的，线程优先级为 NORM_PRIORITY 的非守护线程
 
-core max
-pre 预处理
-创建新线程 factory
-keep-alive
-队列（数据结构）
-异常处理，警察
-aop(hook)
-处理队列,remove 等
-
-最重要的是线程处理，即 execute 方法
-但是 execute 方法又交给了 woker 去处理请求。每一个 worker 就是一个线程，
-
-问题 worker 什么时候结束？
-Worker 是什么，做了什么处理？
-怎么保证性能的高效？
 -->
