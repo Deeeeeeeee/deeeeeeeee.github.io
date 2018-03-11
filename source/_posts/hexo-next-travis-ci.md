@@ -8,7 +8,7 @@ categories:
   - 博客
 date: 2018-02-03 20:56:45
 ---
-<video height="100%" width="100%" loop="loop" autoplay="autoplay" controls="controls">
+<video height="100%" width="100%" loop="loop" controls="controls">
   <source src="/post/hexo-next-travis-ci/show.mp4" type="video/mp4"></source>
 </video>
 
