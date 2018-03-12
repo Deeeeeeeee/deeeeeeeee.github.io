@@ -550,12 +550,28 @@ protected <T> RunnableFuture<T> newTaskFor(Callable<T> callable) {
 返回类型的设计五花八门，各有各的好处，当然有些坏处也特别明显(就是扩展性不好，使用起来不够顺手)。我也是最近才发现这种设计的，这种设计其实在很多源码当中**经常使用**。
 就算返回很简单，也可以包装一下，为的就是利用面向对象的多态性质。比如 `javax.xml.ws.Response` 接口，其实返回的是 `Map<String,Object>`，但就是要来这么一手，啊哈哈哈。
 
-### beforeExecute 和 afterExecute
-这两个就是所谓的 hook(不知道如何正确解释 hook =。=)。这个两个方法使用在 <i id="hook_a" class="fa fa-hand-o-up"/><a href="#worker_a">*runworker()*</a> 中，可以在执行任务前后做点什么。
+### beforeExecute、afterExecute 和 terminated
+`beforeExecute()`、`afterExecute()` 就是所谓的 hook(不知道如何正确解释 hook =。=)。这个两个方法使用在 <i id="hook_a" class="fa fa-hand-o-up"/><a href="#worker_a">*runworker()*</a> 中，可以在执行任务前后做点什么。
 
-将动作延后到子类当中，这样的谁也是非常常见的。未完待续...
+{% note success %}
+将动作延后到子类当中，这样的设计也是非常常见的。
+{% endnote %}
 
-<!-- 还有一个 `finalize()` 方法，但是这个是 Object 的方法，是在对象没有被引用，GC 之前会调用的方法。通常进行释放资源等操作。-->
+`terminated()` 同样如此，详细可以查看 `tryTerminate()` 方法。
+
+### finalize
+还有一个 `finalize()` 方法，但是这个是 Object 的方法，是在对象没有被引用，GC 之前会调用的方法。通常进行释放资源等操作。
+
+## 如何去设计
+对于面向对象，我一直在摸索（虽然也没摸索多久～），我也没有什么好的经验。只能在这里立 flag，然后去实践，然后再总结，再实践...
+
+但是把线程池一路看下来，我决定按照以下思路去进行实践，以后有机会再回来说明效果如何。大致就是先设计 api，然后再去实现。
+- 首先确定模块的核心功能，并定义为接口。比如这里的 `Executor` 接口
+- 补充必要的辅助功能，并继承核心接口
+- 接口的参数和返回值可以考虑使用接口，充分发挥多态
+- 围绕核心功能进行实现，实现的时候将职责分开，谁该干嘛就交给谁干
+- 最后将常用的配置放到构造函数，并且必要时开放一些方法给子类去实现
+- 如有必要，提供工厂，用于创建常用配置的实现。如 `Executors`
 
 <!-- ThreadPool 的 defaultThreadFactory 创建的线程是同一个 ThreadGroup 的，线程优先级为 NORM_PRIORITY 的非守护线程
 
