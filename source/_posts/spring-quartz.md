@@ -9,7 +9,7 @@ tags:
 date: 2018-03-21 23:12:12
 ---
 
-前几天生产上出现一个问题，spring 集成 quartz 无故停住了，重启又好了。导致一些功能受到限制，查询和沟通了一段时间才解决。
+前几天生产上出现一个问题，使用 spring 集成 quartz 定时器无故停住了，重启又好了。导致一些功能受到限制，查询和沟通了一段时间才解决。
 
 描述：表象，订单状态全部卡在了一个状态下，不再改变；日志，定时器执行一段时间后不再执行，而且是所有的定时器都不执行了。
 
@@ -33,25 +33,25 @@ date: 2018-03-21 23:12:12
 ```java
 <!-- 定时器注册工厂 -->
 <bean id="SpringJobSchedulerFactoryBean" class="org.springframework.scheduling.quartz.SchedulerFactoryBean">
-	<property name="triggers">
-		<list>
-			<ref bean="ftp-scan-trigger"/>
-		</list>
-	</property>
+    <property name="triggers">
+        <list>
+            <ref bean="ftp-scan-trigger"/>
+        </list>
+    </property>
 </bean>
 <!-- 定时器配置 -->
 <bean id="ftp-scan-trigger" class="org.springframework.scheduling.quartz.CronTriggerBean">
-	<property name="jobDetail" ref="ftp-scan-jobDetail"></property>
-	<property name="cronExpression" value="0 0/1 * * * ?"></property>
+    <property name="jobDetail" ref="ftp-scan-jobDetail"></property>
+    <property name="cronExpression" value="0 0/1 * * * ?"></property>
 </bean>
 <!-- 任务配置 -->
 <bean id="ftp-scan-jobDetail" class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
-	<property name="targetObject">
-		<ref bean="ftp-scan-jobBean"/>
-	</property>
-	<property name="targetMethod">
-		<value>execute</value>
-	</property>
+    <property name="targetObject">
+        <ref bean="ftp-scan-jobBean"/>
+    </property>
+    <property name="targetMethod">
+        <value>execute</value>
+    </property>
 </bean>
 ```
 
@@ -157,7 +157,23 @@ org.quartz.jobStore.class = org.quartz.simpl.RAMJobStore
 # 最后处理
 
 清理了路径下的文件，然后再进行代码上的优化。
-- 把容易卡住的定时器分配到另外一个线程池中
-- 缓存 listFiles 出来的文件名称，解决大量的无效操作（这是在查询问题过程中发现的）
+- 把容易卡住的定时器分配到另外一个线程池中(添加一个多一个 `SchedulerFactoryBean`)，并扩大线程池的线程数
+- 缓存 listFiles 出来的文件名称，去除大量的无效操作（这是在查询问题过程中发现的）
+- 如果后面观察到文件数量仍然过多，则需要提高每个线程消耗消耗文件的能力
 
+```java
+<bean id="SpringJobSchedulerFactoryBean"
+    class="org.springframework.scheduling.quartz.SchedulerFactoryBean">
+    <property name="triggers">
+        <list>
+            <ref bean="ftp-scan-trigger"/>
+        </list>
+    </property>
+    <property name="configLocation" value="classpath:quartz.properties"/>
+</bean> 
+```
+然后在 quartz.properites 中配置。
+
+{% note warning %}
 写在最后，分析类似的问题，还是多使用分析工具～因为发现当初我的猜测跟实践有很大的差别[捂脸]
+{% endnote %}
