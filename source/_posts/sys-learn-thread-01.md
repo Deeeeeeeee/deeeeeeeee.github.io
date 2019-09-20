@@ -167,7 +167,7 @@ private native boolean isInterrupted(boolean ClearInterrupted);
 
 ```java
 // 这里调用了 interrupt 方法，但没有根据中断状态进行处理，是不会停止的
-public static class TreadClazz extends Thread {
+public static class ThreadClazz extends Thread {
     @Override
     public void run() {
         while (true) {
@@ -177,7 +177,7 @@ public static class TreadClazz extends Thread {
 }
 
 public static void main(String[] args) {
-    TreadClazz clazz = new TreadClazz();
+    ThreadClazz clazz = new ThreadClazz();
     clazz.start();
     clazz.interrupt();
 }
@@ -199,7 +199,7 @@ public static void main(String[] args) {
 
 ```java
 // 只要在 catch 里再调用一下 interrupt() 方法，中断标志位就会改为 true，从而退出循环
-public static class TreadClazz extends Thread {
+public static class ThreadClazz extends Thread {
     @Override
     public void run() {
         while (!Thread.currentThread().isInterrupted()) {
@@ -217,7 +217,7 @@ public static class TreadClazz extends Thread {
 }
 
 public static void main(String[] args) throws InterruptedException {
-    TreadClazz clazz = new TreadClazz();
+    ThreadClazz clazz = new ThreadClazz();
     clazz.start();
     Thread.sleep(100);
     clazz.interrupt();
@@ -293,7 +293,7 @@ public void increase4() {
 
 ```java
 // volatile 不保证原子性
-public static class TreadClazz extends Thread {
+public static class ThreadClazz extends Thread {
     @Override
     public void run() {
         aInt++;
@@ -309,10 +309,10 @@ public static class TreadClazz extends Thread {
 }
 
 public static void main(String[] args) {
-    TreadClazz clazz0 = new TreadClazz();
-    TreadClazz clazz1 = new TreadClazz();
-    TreadClazz clazz2 = new TreadClazz();
-    TreadClazz clazz3 = new TreadClazz();
+    ThreadClazz clazz0 = new ThreadClazz();
+    ThreadClazz clazz1 = new ThreadClazz();
+    ThreadClazz clazz2 = new ThreadClazz();
+    ThreadClazz clazz3 = new ThreadClazz();
 
     clazz0.start();
     clazz1.start();
@@ -336,3 +336,251 @@ threadName:Thread-2. aInt is 7
 - 用空间换线程的安全性
 - 线程级别变量隔离
 - 主键为线程，值为需要存的值
+
+
+### 线程协作
+
+#### 等待和通知
+
+Java 线程协作中有一对方法 wait/notify/notifyAll，最典型的应用是生产和消费者模式
+
+这里有一个标准的范式
+- 等待方
+  - 获取对象的锁
+  - 循环里判断是否满足条件，不满足调用 wait
+  - 如果满足，执行业务逻辑
+- 通知方
+  - 获取对象的锁
+  - 改变条件
+  - 通知所有等待的线程
+
+具体到代码
+
+```java
+public static class ThreadClazz extends Thread {
+    private WaitClazz waitClazz;
+
+    public ThreadClazz(WaitClazz clazz) {
+        this.waitClazz = clazz;
+    }
+
+    // 线程进入等待状态，等待被通知
+    @Override
+    public void run() {
+        try {
+            this.waitClazz.waitSomething();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        System.out.println("thread is:" + this.getName() + ". 结束线程");
+    }
+}
+
+public static class WaitClazz {
+    // 是否需要等待的条件
+    private boolean waitFlag = true;
+
+    public synchronized void waitSomething() throws InterruptedException {
+        while (waitFlag) {
+            wait();
+        }
+        System.out.println("接收到通知，继续干活");
+    }
+
+    public synchronized void notifySomething() {
+        waitFlag = false;
+        notify();
+        System.out.println("发出通知信号");
+    }
+}
+
+public static void main(String[] args) throws InterruptedException {
+    WaitClazz waitClazz = new WaitClazz();
+
+    Thread t1 = new Thread(new ThreadClazz(waitClazz));
+    Thread t2 = new Thread(new ThreadClazz(waitClazz));
+    Thread t3 = new Thread(new ThreadClazz(waitClazz));
+    Thread t4 = new Thread(new ThreadClazz(waitClazz));
+
+    t1.start();
+    t2.start();
+    t3.start();
+    t4.start();
+
+    Thread.sleep(1000);
+
+    waitClazz.notifySomething();
+}
+```
+
+> 这里要注意 notify 和 notifyAll 的区别，notify 会选取一个线程进行唤醒，有时候唤醒的线程并不是完成你工作的线程。所以尽量使用 notifyAll 进行唤醒
+
+#### 等待超时范式
+
+等待超时常用于连接池
+
+```
+// 伪代码
+long overtime = now+T;
+long remain = T;
+while (result 不满足条件 && remain > 0) {
+wait(remain);
+remain = overtime - now;
+}
+return result;
+```
+
+一个自定义数据库连接池的例子。当 wait 超时时，这里返回了 null，实际情况会抛出异常
+
+```java
+// 实现 java.sql.Connection 接口
+public class SqlConnection implements Connection {
+    ...
+    @Override
+    public Statement createStatement() throws SQLException {
+        try {
+            Thread.sleep(10);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    @Override
+    public void commit() throws SQLException {
+        try {
+            Thread.sleep(70);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+    ...
+}
+```
+
+```java
+// 实现连接池
+public class SqlConnectionPool {
+    // 数据库连接容器
+    private final LinkedList<SqlConnection> pool = new LinkedList<>();
+
+    public SqlConnectionPool(int initialSize) {
+        if (initialSize > 0) {
+            for (int i = 0; i < initialSize; i++) {
+                pool.addLast(new SqlConnection());
+            }
+        }
+    }
+
+    /**
+     * 获取数据库连接
+     */
+    public SqlConnection getConn(long mills) throws InterruptedException {
+        synchronized (this.pool) {
+            // 没有超时时间，一直等待通知
+            if (mills <= 0) {
+                while (this.pool.isEmpty()) {
+                    this.pool.wait();
+                }
+                return this.pool.removeFirst();
+            } else {
+                long overtime = System.currentTimeMillis() + mills;
+                long remain = mills;
+                while (this.pool.isEmpty() && remain > 0) {
+                    this.pool.wait(remain);
+                    remain = overtime - System.currentTimeMillis();
+                }
+                if (this.pool.isEmpty()) {
+                    return null;
+                }
+                return this.pool.removeFirst();
+            }
+        }
+    }
+
+    /**
+     * 释放连接
+     */
+    public void releaseConn(SqlConnection conn) {
+        synchronized (this.pool) {
+            this.pool.addLast(conn);
+            this.pool.notifyAll();
+        }
+    }
+}
+```
+
+```java
+// 测试 wait 超时
+public class SqlConnectionPoolTest extends Thread {
+    private static final int THREAD_COUNT = 50;
+
+    // 测试时，连接池大小应当小于启动的线程数量
+    private static SqlConnectionPool POOL = new SqlConnectionPool(30);
+    private static AtomicInteger SUCCESS_COUNT = new AtomicInteger(0);
+    private static AtomicInteger TIMEOUT_COUNT = new AtomicInteger(0);
+    private static CountDownLatch latch = new CountDownLatch(THREAD_COUNT);
+    private int count = 0;
+
+    @Override
+    public void run() {
+        while (count < 20) {
+            SqlConnection conn = null;
+            try {
+                conn = POOL.getConn(100);
+                if (conn == null) {
+                    TIMEOUT_COUNT.incrementAndGet();
+                    System.out.println(String.format("%s线程获取连接超时", this.getName()));
+                } else {
+                    conn.createStatement();
+                    conn.commit();
+                    SUCCESS_COUNT.incrementAndGet();
+                }
+            } catch (InterruptedException e) {
+                System.out.println("获取数据库连接失败");
+            } catch (SQLException e) {
+                System.out.println("数据库语句执行有问题");
+            } finally {
+                if (conn != null) {
+                    POOL.releaseConn(conn);
+                }
+                count++;
+            }
+        }
+        latch.countDown();
+    }
+
+    public static void main(String[] args) throws InterruptedException {
+        for (int i = 0; i < THREAD_COUNT; i++) {
+            SqlConnectionPoolTest thread = new SqlConnectionPoolTest();
+            thread.start();
+        }
+
+        latch.await();
+        System.out.println("成功获取连接数：" + SUCCESS_COUNT);
+        System.out.println("获取连接超时数：" + TIMEOUT_COUNT);
+    }
+}
+```
+
+```
+// 运行结果
+...
+Thread-22线程获取连接超时
+Thread-8线程获取连接超时
+Thread-18线程获取连接超时
+成功获取连接数：701
+获取连接超时数：299
+```
+
+#### join 方法
+
+线程A调用了线程B的 join 方法，需要等待线程B执行完，才能继续完成工作
+
+类似于邀请其他人插队一样的感觉，然后其他人还可以邀请人进行插队。。。
+
+#### 几个方法对锁的影响
+
+- yeild()、sleep() 调用之后，持有的锁是不会释放的
+- 调用 wait() 方法之前必须持有锁，调用之后会释放锁，wait() 方法返回后会继续持有锁
+- 调用 notify() 方法之前必须持有锁，调用之后本身不会释放锁，执行完代码块时才释放。所以notify一般写在代码块的最后面
