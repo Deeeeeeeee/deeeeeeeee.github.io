@@ -18,6 +18,8 @@ date: 2019-09-23 19:31:48
 - Exchanger
 - Callable/Future/FutureTask
 
+<!-- more -->
+
 ### Fork-Join
 
 ForkJoin 框架包括 ForkJoinPool、ForkTask、RecursiveTask 和 RecursiveAction，后面两个是 ForkTask 的抽象子类。作为浅聊，我们就来了解一下它们的基本思想，怎么使用和使用的场景
