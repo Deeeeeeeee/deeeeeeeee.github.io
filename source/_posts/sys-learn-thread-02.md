@@ -20,11 +20,11 @@ date: 2019-09-23 19:31:48
 
 <!-- more -->
 
-### Fork-Join
+## Fork-Join
 
 ForkJoin 框架包括 ForkJoinPool、ForkTask、RecursiveTask 和 RecursiveAction，后面两个是 ForkTask 的抽象子类。作为浅聊，我们就来了解一下它们的基本思想，怎么使用和使用的场景
 
-#### Fork-Join 基本思想
+### Fork-Join 基本思想
 
 Fork-Join 基本思想是分而治之，是不是很熟悉的名词，快排、归并，Hadoop 的 map/reduce 中都有这种思想。其实是很常见的一种思想，一句话来说，就是分成小任务，然后再合并起来
 
@@ -32,7 +32,7 @@ Fork-Join 基本思想是分而治之，是不是很熟悉的名词，快排、�
 
 规模为N的问题，当N<阈值直接解决；当N>阈值，将问题分解为K个小规模问题，这些问题相互独立，与原问题形式相同，最后将子问题的解合并得到原问题的解
 
-#### Fork-Join 工作密取
+### Fork-Join 工作密取
 
 先来看一段 jdk 里面 ForkJoinPool 的描述
 
@@ -54,7 +54,7 @@ Fork-Join 基本思想是分而治之，是不是很熟悉的名词，快排、�
 
 意思是 ForkJoinPool 跟其他 ExecutorService 不同的是它采用了工作密取 work-stealing。工作密取是分而治之分割了每个任务之后，某个线程提前完成了任务，就会去其他线程偷取任务来完成，加快执行效率。同时，第一个分配的线程是从队列中的头部拿任务，当完成任务的线程去其他队列拿任务的时候是从尾部拿任务，所以这样就避免了竞争
 
-#### Fork-Join 使用
+### Fork-Join 使用
 
 标准范式，就是主流的使用套路
 
@@ -114,7 +114,7 @@ private static class MyTask extends RecursiveTask<Integer> {
 }
 ```
 
-### CountDownLatch 和 CyclicBarrier
+## CountDownLatch 和 CyclicBarrier
 
 我们先来看看这两个工具可以干一些什么事情
 - CountDownLatch 是一个计数器，一组线程等待其他线程执行，然后再开始执行就可以使用 CountDownLatch。比如应用启动需要几个线程做完初始化工作，才开始运行
@@ -166,7 +166,7 @@ public class CountDownLatchDemo {
 }
 ```
 
-### Semaphore 信号量
+## Semaphore 信号量
 
 信号量：控制同时访问某个特定资源的线程数量，保证资源合理使用，用于流量控制
 
@@ -229,13 +229,13 @@ public class DBPool {
 }
 ```
 
-### Exchanger
+## Exchanger
 
 交换线程数据的工具。两个线程间的数据交换，使用场景，只有一个生产者和一个消费者
 
 由于这个只运行两个线程间进行交换，使用受到了不少限制，不是很实用，这里就不写 demo 了
 
-###  Callable/Future/FutureTask
+##  Callable/Future/FutureTask
 
 FutureTask 包装 Callable 常用来启动线程，跟 Runnable 不同的是，它可以有返回值。在线程池中经常可以看到
 
