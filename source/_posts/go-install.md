@@ -13,7 +13,7 @@ date: 2021-10-02 23:31:47
 - vim配置
 - goncurses安装
 
-# 安装
+## 安装
 
 - 下载 [https://golang.org/dl/](https://golang.org/dl/)
 - tar -zxvf goxxx.tar.gz 到 /usr/local/go
@@ -26,7 +26,7 @@ date: 2021-10-02 23:31:47
 
 <!-- more -->
 
-# vim配置
+## vim配置
 
 前置需要配置vim插件管理等，可以参考 [https://gitee.com/sealde/dotfile](https://gitee.com/sealde/dotfile)
 
@@ -42,7 +42,7 @@ go install golang.org/x/tools/gopls@latest
 :GoInstallBinaries
 ```
 
-# goncurses安装
+## goncurses安装
 
 这个用来开发命令行ui的，不开发不需要安装
 
