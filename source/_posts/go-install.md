@@ -33,13 +33,34 @@ date: 2021-10-02 23:31:47
 - 一个是使用 coc-go，[https://github.com/josa42/coc-go](https://github.com/josa42/coc-go)
 - 另一个是使用 vim-go,
   - `Plug 'fatih/vim-go', { 'tag': '*' }`   # go 主要插件 [地址](https://github.com/fatih/vim-go)
-  - `Plug 'dgryski/vim-godef'`              # go 代码追踪，gd 自动跳转
 
 我这里使用 vim-go 先安装 gopls
 ```
+# go lsp(language server protocol)
 go install golang.org/x/tools/gopls@latest
 # 打开vim执行命令. vim-go依赖的工具自动安装。参考链接 https://zhuanlan.zhihu.com/p/51656877
 :GoInstallBinaries
+# 在 .vimrc 里加上. 参考 https://github.com/golang/tools/blob/master/gopls/doc/vim.md
+let g:go_def_mode='gopls'
+let g:go_info_mode='gopls'
+```
+
+自动补全
+```
+# coc-go. 在 .vimrc 加上 coc-go 插件
+let g:coc_global_extensions = [
+    \ "coc-go"]
+# :ConConfig 加上lsp配置. 参考 https://github.com/golang/tools/blob/master/gopls/doc/vim.md
+"languageserver": {
+    "golang": {
+        "command": "gopls",
+        "rootPatterns": ["go.mod", ".vim/", ".git/", ".hg/"],
+        "filetypes": ["go"],
+        "initializationOptions": {
+            "usePlaceholders": true
+        }
+    }
+}
 ```
 
 ## goncurses安装
