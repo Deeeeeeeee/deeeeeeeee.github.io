@@ -16,12 +16,14 @@ date: 2021-10-02 23:31:47
 ## 安装
 
 - 下载 [https://golang.org/dl/](https://golang.org/dl/)
-- tar -zxvf goxxx.tar.gz 到 /usr/local/go
+- tar -zxvf goxxx.tar.gz 到 /usr/local/lib/go
 - 环境变量 ~/.bash_profile
-  - export GOROOT=/usr/local/go                 # go安装路径
-  - export PATH=$PATH:$GOPATH/bin:$GOROOT/bin   # 添加到path
-  - export GOPATH=$HOME/.go                     # 工作目录. go get 和 go install 会使用的目录
-  - export GOPROXY=https://goproxy.cn,direct    # 代理加速
+  ```
+  export GOROOT=/usr/local/lib/go             # go安装路径
+  export GOPATH=$HOME/.go                     # 工作目录. go get 和 go install 会使用的目录
+  export PATH=$PATH:$GOPATH/bin:$GOROOT/bin   # 添加到path
+  export GOPROXY=https://goproxy.cn,direct    # 代理加速
+  ```
 - go version 检测配置结果
 
 <!-- more -->

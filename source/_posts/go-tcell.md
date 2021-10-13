@@ -319,7 +319,162 @@ func (t *tScreen) engage() error {
 干了几件事情
 - 注册窗口大小改变回调函数
   - 函数注册到了 tty.cb 中
-- tty.Start
+- tty.Start()
 - stop chan 初始化
 - 输入处理循环
 - main循环
+
+#### tty.Start()方法
+
+tty.Start() 在 tty_unis.go 中
+
+```go
+func (tty *devTty) Start() error {
+	tty.l.Lock()
+	defer tty.l.Unlock()
+
+    // 这里重新获取了一遍dev的fd，说是macOS有bug
+	var err error
+	if tty.f, err = os.OpenFile(tty.dev, os.O_RDWR, 0); err != nil {
+		return err
+	}
+	tty.fd = int(tty.of.Fd())
+
+	if !term.IsTerminal(tty.fd) {
+		return errors.New("device is not a terminal")
+	}
+
+	_ = tty.f.SetReadDeadline(time.Time{})
+	saved, err := term.MakeRaw(tty.fd) // also sets vMin and vTime
+	if err != nil {
+		return err
+	}
+	tty.saved = saved
+
+	tty.stopQ = make(chan struct{})             // stop chan
+	tty.wg.Add(1)
+	go func(stopQ chan struct{}) {              // 起了个go程，处理窗口大小改变信息
+		defer tty.wg.Done()
+		for {
+			select {
+			case <-tty.sig:
+				tty.l.Lock()
+				cb := tty.cb
+				tty.l.Unlock()
+				if cb != nil {
+					cb()
+				}
+			case <-stopQ:
+				return
+			}
+		}
+	}(tty.stopQ)
+
+	signal.Notify(tty.sig, syscall.SIGWINCH)    // 向系统注册窗口大小改变信号
+	return nil
+}
+```
+
+干了几件事情：
+- 初始化 tty.stopQ 管道
+- 起了个go程，处理窗口大小改变信息
+  - select 两个管道 stopQ 和 tty.sig
+  - 执行了回调函数
+- 注册窗口大小改变回调函数
+
+#### inputLoop输入处理
+
+再来看看 inputLoop 方法
+
+```go
+func (t *tScreen) inputLoop(stopQ chan struct{}) {
+
+	defer t.wg.Done()
+	for {
+		select {
+		case <-stopQ:
+			return
+		default:
+		}
+		chunk := make([]byte, 128)
+		n, e := t.tty.Read(chunk)               // 从tty的fd读数据
+		switch e {
+		case nil:
+		default:
+			_ = t.PostEvent(NewEventError(e))
+			return
+		}
+		if n > 0 {
+			t.keychan <- chunk[:n]              // 将读取得数据送到keychan
+		}
+	}
+}
+```
+
+干了几件事情：
+- 从tty的fd读数据
+- 将数据送到keychan
+
+#### mainLoop主循环
+
+再来看看 mainLoop 方法
+
+```go
+func (t *tScreen) mainLoop(stopQ chan struct{}) {
+	defer t.wg.Done()
+	buf := &bytes.Buffer{}
+	for {
+		select {
+		case <-stopQ:                               // screen 的 stopQ
+			return
+		case <-t.quit:                              // screen 的 quit
+			return
+		case <-t.resizeQ:                           // tty 接收信号后过来的消息
+			t.Lock()
+			t.cx = -1
+			t.cy = -1
+			t.resize()
+			t.cells.Invalidate()
+			t.draw()
+			t.Unlock()
+			continue
+		case <-t.keytimer.C:                        // 定时处理50ms
+			// If the timer fired, and the current time
+			// is after the expiration of the escape sequence,
+			// then we assume the escape sequence reached it's
+			// conclusion, and process the chunk independently.
+			// This lets us detect conflicts such as a lone ESC.
+			if buf.Len() > 0 {
+				if time.Now().After(t.keyexpire) {
+					t.scanInput(buf, true)
+				}
+			}
+			if buf.Len() > 0 {
+				if !t.keytimer.Stop() {             // 主动停timer，然后重置
+					select {
+					case <-t.keytimer.C:
+					default:
+					}
+				}
+				t.keytimer.Reset(time.Millisecond * 50)
+			}
+		case chunk := <-t.keychan:                  // kechan事件处理
+			buf.Write(chunk)
+			t.keyexpire = time.Now().Add(time.Millisecond * 50)
+			t.scanInput(buf, false)
+			if !t.keytimer.Stop() {
+				select {
+				case <-t.keytimer.C:
+				default:
+				}
+			}
+			if buf.Len() > 0 {
+				t.keytimer.Reset(time.Millisecond * 50)
+			}
+		}
+	}
+}
+```
+
+干了几件事情：
+- 

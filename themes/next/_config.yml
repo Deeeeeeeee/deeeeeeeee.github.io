@@ -112,9 +112,9 @@ index_with_subtitle: false
 menu:
   #home: / || home
   #tags: /tags/ || tags
-  categories: /categories/ || th
-  archives: /archives/ || archive
-  about: /about/ || user
+  categories: /categories/index.html|| th
+  archives: /archives/index.html|| archive
+  about: /about/index.html|| user
   #schedule: /schedule/ || calendar
   #sitemap: /sitemap.xml || sitemap
   #commonweal: /404/ || heartbeat
