@@ -8,11 +8,19 @@ tags:
 date: 2021-10-13 17:00:08
 ---
 
-## 目录
+{% asset_img tcell.png %}
 
-## 
+<!-- more -->
 
-```shell
+## 简单介绍
+
+[https://github.com/gdamore/tcell](https://github.com/gdamore/tcell)
+
+一个终端编辑库，受termbox启发，目前仍在维护，有不少终端工具在使用，如fzf, termshark, tview。由于打算使用这个库，翻了下代码，整理了一点内容，也方便后面查看
+
+## 文件目录
+
+```
 .
 ├── _demos              # demo
 │   └── ...
@@ -57,7 +65,7 @@ date: 2021-10-13 17:00:08
 ├── tty_unix.go
 └── views               # 对 tcell 封装
     ├── _demos
-    │   └── widget.go
+    │   └── ...
     ├── app.go
     ├── boxlayout.go
     ├── cellarea.go
@@ -73,65 +81,65 @@ date: 2021-10-13 17:00:08
     └── widget.go
 ```
 
-## 入口
+## 入口views
 
-views/app.go 中 run 方法
+views 是 tcell 自己的一层封装，从这里入手开始看。会看到 views/app.go 中 run 方法
 
 ```go
 func (app *Application) run() {
 
-	screen := app.screen
-	widget := app.widget
+    screen := app.screen
+    widget := app.widget
 
-	if widget == nil {
-		app.wg.Done()
-		return
-	}
-	if screen == nil {
+    if widget == nil {
+        app.wg.Done()
+        return
+    }
+    if screen == nil {
         // app 初始化
-		if e := app.initialize(); e != nil {
-			app.wg.Done()
-			return
-		}
-		screen = app.screen
-	}
-	defer func() {
-		screen.Fini()
-		app.wg.Done()
-	}()
+        if e := app.initialize(); e != nil {
+            app.wg.Done()
+            return
+        }
+        screen = app.screen
+    }
+    defer func() {
+        screen.Fini()
+        app.wg.Done()
+    }()
     // screen 初始化
-	screen.Init()
-	screen.Clear()
+    screen.Init()
+    screen.Clear()
     // widget 设置 view
-	widget.SetView(screen)
+    widget.SetView(screen)
 
 loop:
-	for {
-		if widget = app.widget; widget == nil {
-			break
-		}
+    for {
+        if widget = app.widget; widget == nil {
+            break
+        }
         // draw 和 show
-		widget.Draw()
-		screen.Show()
+        widget.Draw()
+        screen.Show()
 
         // screen pollEvent
-		ev := screen.PollEvent()
-		switch nev := ev.(type) {
-		case *eventAppQuit:
-			break loop
-		case *eventAppUpdate:
-			screen.Show()
-		case *eventAppRefresh:
-			screen.Sync()
-		case *eventAppFunc:
-			nev.fn()
-		case *tcell.EventResize:
-			screen.Sync()
-			widget.Resize()
-		default:
-			widget.HandleEvent(ev)
-		}
-	}
+        ev := screen.PollEvent()
+        switch nev := ev.(type) {
+        case *eventAppQuit:
+            break loop
+        case *eventAppUpdate:
+            screen.Show()
+        case *eventAppRefresh:
+            screen.Sync()
+        case *eventAppFunc:
+            nev.fn()
+        case *tcell.EventResize:
+            screen.Sync()
+            widget.Resize()
+        default:
+            widget.HandleEvent(ev)
+        }
+    }
 }
 ```
 
@@ -144,38 +152,38 @@ loop:
   - poollEvent
   - 处理事件
 
-##
+### app.initialize初始化
 
 views/app.go 中 app.initialize 会调 tscreen.go 下面的方法
 
 ```go
 func NewTerminfoScreenFromTty(tty Tty) (Screen, error) {
     // 从系统 env 中获取 TERM，然后找到 terminfo
-	ti, e := terminfo.LookupTerminfo(os.Getenv("TERM"))
-	if e != nil {
-		ti, e = loadDynamicTerminfo(os.Getenv("TERM"))
-		if e != nil {
-			return nil, e
-		}
-		terminfo.AddTerminfo(ti)
-	}
-	t := &tScreen{ti: ti, tty: tty}
+    ti, e := terminfo.LookupTerminfo(os.Getenv("TERM"))
+    if e != nil {
+        ti, e = loadDynamicTerminfo(os.Getenv("TERM"))
+        if e != nil {
+            return nil, e
+        }
+        terminfo.AddTerminfo(ti)
+    }
+    t := &tScreen{ti: ti, tty: tty}
 
-	t.keyexist = make(map[Key]bool)
-	t.keycodes = make(map[string]*tKeyCode)
-	if len(ti.Mouse) > 0 {
-		t.mouse = []byte(ti.Mouse)
-	}
-	t.prepareKeys()
-	t.buildAcsMap()
-	t.resizeQ = make(chan bool, 1)                      // resize chan
-	t.fallback = make(map[rune]string)
+    t.keyexist = make(map[Key]bool)
+    t.keycodes = make(map[string]*tKeyCode)
+    if len(ti.Mouse) > 0 {
+        t.mouse = []byte(ti.Mouse)
+    }
+    t.prepareKeys()
+    t.buildAcsMap()
+    t.resizeQ = make(chan bool, 1)                      // resize chan
+    t.fallback = make(map[rune]string)
     // 加载字符映射
-	for k, v := range RuneFallbacks {
-		t.fallback[k] = v
-	}
+    for k, v := range RuneFallbacks {
+        t.fallback[k] = v
+    }
 
-	return t, nil
+    return t, nil
 }
 ```
 
@@ -183,58 +191,58 @@ func NewTerminfoScreenFromTty(tty Tty) (Screen, error) {
 - 从 env 中获取 TERM 环境变量，然后找 terminfo
 - 创建 tScreen 实例，并初始化基本字段
 
-## 
+## screen.Init方法
 
 再来看 tscreen.go Init 方法
 
 ```go
 func (t *tScreen) Init() error {
     // 初始化t.tty
-	if e := t.initialize(); e != nil {
-		return e
-	}
+    if e := t.initialize(); e != nil {
+        return e
+    }
 
-	t.evch = make(chan Event, 10)                       // 事件chan
-	t.keychan = make(chan []byte, 10)                   // 按键chan
-	t.keytimer = time.NewTimer(time.Millisecond * 50)   // 处理按键的定时器
-	t.charset = "UTF-8"
+    t.evch = make(chan Event, 10)                       // 事件chan
+    t.keychan = make(chan []byte, 10)                   // 按键chan(包括鼠标)
+    t.keytimer = time.NewTimer(time.Millisecond * 50)   // 处理按键的定时器
+    t.charset = "UTF-8"
 
-	t.charset = getCharset()
-	if enc := GetEncoding(t.charset); enc != nil {
-		t.encoder = enc.NewEncoder()
-		t.decoder = enc.NewDecoder()
-	} else {
-		return ErrNoCharset
-	}
-	ti := t.ti
+    t.charset = getCharset()
+    if enc := GetEncoding(t.charset); enc != nil {
+        t.encoder = enc.NewEncoder()
+        t.decoder = enc.NewDecoder()
+    } else {
+        return ErrNoCharset
+    }
+    ti := t.ti
 
     ...
 
-	t.colors = make(map[Color]Color)
-	t.palette = make([]Color, t.nColors())
-	for i := 0; i < t.nColors(); i++ {
-		t.palette[i] = Color(i) | ColorValid
-		// identity map for our builtin colors
-		t.colors[Color(i)|ColorValid] = Color(i) | ColorValid
-	}
+    t.colors = make(map[Color]Color)
+    t.palette = make([]Color, t.nColors())
+    for i := 0; i < t.nColors(); i++ {
+        t.palette[i] = Color(i) | ColorValid
+        // identity map for our builtin colors
+        t.colors[Color(i)|ColorValid] = Color(i) | ColorValid
+    }
 
-	t.quit = make(chan struct{})                        // quit chan
+    t.quit = make(chan struct{})                        // quit chan
 
-	t.Lock()
-	t.cx = -1
-	t.cy = -1
-	t.style = StyleDefault
-	t.cells.Resize(w, h)
-	t.cursorx = -1
-	t.cursory = -1
-	t.resize()
-	t.Unlock()
+    t.Lock()
+    t.cx = -1                                           // cellbuffer 宽
+    t.cy = -1                                           // cellbuffer 高
+    t.style = StyleDefault
+    t.cells.Resize(w, h)
+    t.cursorx = -1                                      // 光标x
+    t.cursory = -1                                      // 光标y
+    t.resize()
+    t.Unlock()
 
-	if err := t.engage(); err != nil {                  // 终端操作调用
-		return err
-	}
+    if err := t.engage(); err != nil {                  // 终端操作调用
+        return err
+    }
 
-	return nil
+    return nil
 }
 ```
 
@@ -242,31 +250,31 @@ func (t *tScreen) Init() error {
 - 初始化 tty
 - 事件、按键chan的初始化，按键定时器
 - quit chan初始化
-- 
+- 终端操作调用
 
 ### 初始化tty
 
 ```go
 // NewDevTtyFromDev opens a tty device given a path.  This can be useful to bind to other nodes.
 func NewDevTtyFromDev(dev string) (Tty, error) {
-	tty := &devTty{
-		dev: dev,
-		sig: make(chan os.Signal),                                  // 接收窗口大小改变信号
-	}
-	var err error
-	if tty.of, err = os.OpenFile(dev, os.O_RDWR, 0); err != nil {   // 拿到 /dev/tty 的 fd
-		return nil, err
-	}
-	tty.fd = int(tty.of.Fd())
-	if !term.IsTerminal(tty.fd) {
-		_ = tty.f.Close()
-		return nil, errors.New("not a terminal")
-	}
-	if tty.saved, err = term.GetState(tty.fd); err != nil {
-		_ = tty.f.Close()
-		return nil, fmt.Errorf("failed to get state: %w", err)
-	}
-	return tty, nil
+    tty := &devTty{
+        dev: dev,
+        sig: make(chan os.Signal),                                  // 接收窗口大小改变信号
+    }
+    var err error
+    if tty.of, err = os.OpenFile(dev, os.O_RDWR, 0); err != nil {   // 拿到 /dev/tty 的 fd
+        return nil, err
+    }
+    tty.fd = int(tty.of.Fd())
+    if !term.IsTerminal(tty.fd) {
+        _ = tty.f.Close()
+        return nil, errors.New("not a terminal")
+    }
+    if tty.saved, err = term.GetState(tty.fd); err != nil {
+        _ = tty.f.Close()
+        return nil, fmt.Errorf("failed to get state: %w", err)
+    }
+    return tty, nil
 }
 ```
 
@@ -276,43 +284,43 @@ tty 的初始化有个窗口大小改变的信号处理，后面会用到。另�
 
 ```go
 func (t *tScreen) engage() error {
-	t.Lock()
-	defer t.Unlock()
-	if t.tty == nil {
-		return ErrNoScreen
-	}
-	t.tty.NotifyResize(func() {             // 注册窗口大小改变回调函数
-		select {
-		case t.resizeQ <- true:             // 往 resizeQ 塞数据
-		default:
-		}
-	})
-	if t.running {
-		return errors.New("already engaged")
-	}
-	if err := t.tty.Start(); err != nil {   // tty.Start
-		return err
-	}
-	t.running = true
-	if w, h, err := t.tty.WindowSize(); err == nil && w != 0 && h != 0 {
-		t.cells.Resize(w, h)
-	}
-	stopQ := make(chan struct{})            // stop chan
-	t.stopQ = stopQ
-	t.enableMouse(t.mouseFlags)
-	t.enablePasting(t.pasteEnabled)
+    t.Lock()
+    defer t.Unlock()
+    if t.tty == nil {
+        return ErrNoScreen
+    }
+    t.tty.NotifyResize(func() {             // 注册窗口大小改变回调函数
+        select {
+        case t.resizeQ <- true:             // 往 resizeQ 塞数据
+        default:
+        }
+    })
+    if t.running {
+        return errors.New("already engaged")
+    }
+    if err := t.tty.Start(); err != nil {   // tty.Start
+        return err
+    }
+    t.running = true
+    if w, h, err := t.tty.WindowSize(); err == nil && w != 0 && h != 0 {
+        t.cells.Resize(w, h)
+    }
+    stopQ := make(chan struct{})            // stop chan
+    t.stopQ = stopQ
+    t.enableMouse(t.mouseFlags)
+    t.enablePasting(t.pasteEnabled)
 
-	ti := t.ti
-	t.TPuts(ti.EnterCA)
-	t.TPuts(ti.EnterKeypad)
-	t.TPuts(ti.HideCursor)
-	t.TPuts(ti.EnableAcs)
-	t.TPuts(ti.Clear)
+    ti := t.ti
+    t.TPuts(ti.EnterCA)
+    t.TPuts(ti.EnterKeypad)
+    t.TPuts(ti.HideCursor)
+    t.TPuts(ti.EnableAcs)
+    t.TPuts(ti.Clear)
 
-	t.wg.Add(2)
-	go t.inputLoop(stopQ)                   // 输入循环
-	go t.mainLoop(stopQ)                    // main循环
-	return nil
+    t.wg.Add(2)
+    go t.inputLoop(stopQ)                   // 输入循环
+    go t.mainLoop(stopQ)                    // main循环
+    return nil
 }
 ```
 
@@ -330,48 +338,48 @@ tty.Start() 在 tty_unis.go 中
 
 ```go
 func (tty *devTty) Start() error {
-	tty.l.Lock()
-	defer tty.l.Unlock()
+    tty.l.Lock()
+    defer tty.l.Unlock()
 
     // 这里重新获取了一遍dev的fd，说是macOS有bug
-	var err error
-	if tty.f, err = os.OpenFile(tty.dev, os.O_RDWR, 0); err != nil {
-		return err
-	}
-	tty.fd = int(tty.of.Fd())
+    var err error
+    if tty.f, err = os.OpenFile(tty.dev, os.O_RDWR, 0); err != nil {
+        return err
+    }
+    tty.fd = int(tty.of.Fd())
 
-	if !term.IsTerminal(tty.fd) {
-		return errors.New("device is not a terminal")
-	}
+    if !term.IsTerminal(tty.fd) {
+        return errors.New("device is not a terminal")
+    }
 
-	_ = tty.f.SetReadDeadline(time.Time{})
-	saved, err := term.MakeRaw(tty.fd) // also sets vMin and vTime
-	if err != nil {
-		return err
-	}
-	tty.saved = saved
+    _ = tty.f.SetReadDeadline(time.Time{})
+    saved, err := term.MakeRaw(tty.fd) // also sets vMin and vTime
+    if err != nil {
+        return err
+    }
+    tty.saved = saved
 
-	tty.stopQ = make(chan struct{})             // stop chan
-	tty.wg.Add(1)
-	go func(stopQ chan struct{}) {              // 起了个go程，处理窗口大小改变信息
-		defer tty.wg.Done()
-		for {
-			select {
-			case <-tty.sig:
-				tty.l.Lock()
-				cb := tty.cb
-				tty.l.Unlock()
-				if cb != nil {
-					cb()
-				}
-			case <-stopQ:
-				return
-			}
-		}
-	}(tty.stopQ)
+    tty.stopQ = make(chan struct{})             // stop chan
+    tty.wg.Add(1)
+    go func(stopQ chan struct{}) {              // 起了个go程，处理窗口大小改变信息
+        defer tty.wg.Done()
+        for {
+            select {
+            case <-tty.sig:
+                tty.l.Lock()
+                cb := tty.cb
+                tty.l.Unlock()
+                if cb != nil {
+                    cb()
+                }
+            case <-stopQ:
+                return
+            }
+        }
+    }(tty.stopQ)
 
-	signal.Notify(tty.sig, syscall.SIGWINCH)    // 向系统注册窗口大小改变信号
-	return nil
+    signal.Notify(tty.sig, syscall.SIGWINCH)    // 向系统注册窗口大小改变信号
+    return nil
 }
 ```
 
@@ -389,25 +397,25 @@ func (tty *devTty) Start() error {
 ```go
 func (t *tScreen) inputLoop(stopQ chan struct{}) {
 
-	defer t.wg.Done()
-	for {
-		select {
-		case <-stopQ:
-			return
-		default:
-		}
-		chunk := make([]byte, 128)
-		n, e := t.tty.Read(chunk)               // 从tty的fd读数据
-		switch e {
-		case nil:
-		default:
-			_ = t.PostEvent(NewEventError(e))
-			return
-		}
-		if n > 0 {
-			t.keychan <- chunk[:n]              // 将读取得数据送到keychan
-		}
-	}
+    defer t.wg.Done()
+    for {
+        select {
+        case <-stopQ:
+            return
+        default:
+        }
+        chunk := make([]byte, 128)
+        n, e := t.tty.Read(chunk)               // 从tty的fd读数据
+        switch e {
+        case nil:
+        default:
+            _ = t.PostEvent(NewEventError(e))
+            return
+        }
+        if n > 0 {
+            t.keychan <- chunk[:n]              // 将读取得数据送到keychan
+        }
+    }
 }
 ```
 
@@ -421,60 +429,152 @@ func (t *tScreen) inputLoop(stopQ chan struct{}) {
 
 ```go
 func (t *tScreen) mainLoop(stopQ chan struct{}) {
-	defer t.wg.Done()
-	buf := &bytes.Buffer{}
-	for {
-		select {
-		case <-stopQ:                               // screen 的 stopQ
-			return
-		case <-t.quit:                              // screen 的 quit
-			return
-		case <-t.resizeQ:                           // tty 接收信号后过来的消息
-			t.Lock()
-			t.cx = -1
-			t.cy = -1
-			t.resize()
-			t.cells.Invalidate()
-			t.draw()
-			t.Unlock()
-			continue
-		case <-t.keytimer.C:                        // 定时处理50ms
-			// If the timer fired, and the current time
-			// is after the expiration of the escape sequence,
-			// then we assume the escape sequence reached it's
-			// conclusion, and process the chunk independently.
-			// This lets us detect conflicts such as a lone ESC.
-			if buf.Len() > 0 {
-				if time.Now().After(t.keyexpire) {
-					t.scanInput(buf, true)
-				}
-			}
-			if buf.Len() > 0 {
-				if !t.keytimer.Stop() {             // 主动停timer，然后重置
-					select {
-					case <-t.keytimer.C:
-					default:
-					}
-				}
-				t.keytimer.Reset(time.Millisecond * 50)
-			}
-		case chunk := <-t.keychan:                  // kechan事件处理
-			buf.Write(chunk)
-			t.keyexpire = time.Now().Add(time.Millisecond * 50)
-			t.scanInput(buf, false)
-			if !t.keytimer.Stop() {
-				select {
-				case <-t.keytimer.C:
-				default:
-				}
-			}
-			if buf.Len() > 0 {
-				t.keytimer.Reset(time.Millisecond * 50)
-			}
-		}
-	}
+    defer t.wg.Done()
+    buf := &bytes.Buffer{}
+    for {
+        select {
+        case <-stopQ:                               // screen 的 stopQ
+            return
+        case <-t.quit:                              // screen 的 quit
+            return
+        case <-t.resizeQ:                           // tty 接收窗口大小改变信号的消息
+            t.Lock()
+            t.cx = -1
+            t.cy = -1
+            t.resize()
+            t.cells.Invalidate()
+            t.draw()
+            t.Unlock()
+            continue
+        case <-t.keytimer.C:                        // 定时处理50ms
+            // If the timer fired, and the current time
+            // is after the expiration of the escape sequence,
+            // then we assume the escape sequence reached it's
+            // conclusion, and process the chunk independently.
+            // This lets us detect conflicts such as a lone ESC.
+            if buf.Len() > 0 {
+                if time.Now().After(t.keyexpire) {
+                    t.scanInput(buf, true)
+                }
+            }
+            if buf.Len() > 0 {
+                if !t.keytimer.Stop() {
+                    select {
+                    case <-t.keytimer.C:
+                    default:
+                    }
+                }
+                t.keytimer.Reset(time.Millisecond * 50)
+            }
+        case chunk := <-t.keychan:                  // kechan事件处理
+            buf.Write(chunk)
+            t.keyexpire = time.Now().Add(time.Millisecond * 50)
+            t.scanInput(buf, false)                 // 从buf读数据，处理成事件推到t.evch中(可能会阻塞)
+            if !t.keytimer.Stop() {                 // 主动停timer
+                select {
+                case <-t.keytimer.C:
+                default:
+                }
+            }
+            if buf.Len() > 0 {                      // 如果buf还有数据，起50ms定时器
+                t.keytimer.Reset(time.Millisecond * 50)
+            }
+        }
+    }
 }
 ```
 
 干了几件事情：
-- 
+- 接收 stopQ 和 quit 消息，终止循环
+- 处理窗口大小改变信号过来的消息
+- 定时处理
+  - keychan接收的输入可能不完整，超过 50ms 直接处理
+  - 超时的情况直接将符号推到evch中(让app来处理)
+- kechan事件处理
+  - 将keychan的消息写到buf
+  - 设置过期时间
+  - 从buf读数据，处理成事件推到t.evch中
+  - 主动停timer，如果buf还有数据，说明buf数据有未完全数据，需要起50ms定时去看超过时间还没有keychan消息的情况
+
+#### scanInput方法
+
+处理buf的符号成对应的事件，发送到 t.evch 中
+
+```go
+func (t *tScreen) scanInput(buf *bytes.Buffer, expire bool) {
+    evs := t.collectEventsFromInput(buf, expire)
+
+    for _, ev := range evs {
+        t.PostEventWait(ev)
+    }
+}
+```
+
+## screen.PollEvent方法
+
+再来看看事件这一部分，在 views/app.go 主循环中，不停地 PollEvent 事件出来处理。PostEvent 方法在 tscreen.go 中
+
+```go
+func (t *tScreen) PollEvent() Event {
+    select {
+    case <-t.quit:
+        return nil
+    case ev := <-t.evch:
+        return ev
+    }
+}
+```
+
+可以看到就是一直从 t.evch chan 中拿事件
+
+### PostEvent方法
+
+PostEvent 分两种，一种 PostEventWait 是如果 t.evch 满了，会阻塞直到能 Post；另一种 PostEvent 是直接发数据到 t.evch，如果满了就返回 Full 错误
+
+```go
+func (t *tScreen) PostEventWait(ev Event) {
+    t.evch <- ev
+}
+
+func (t *tScreen) PostEvent(ev Event) error {
+    select {
+    case t.evch <- ev:
+        return nil
+    default:
+        return ErrEventQFull
+    }
+}
+```
+
+### 触发时机
+
+1. scanInput 的时候。即从终端读完 keychan 消息处理成事件后
+2. resize 的时候。而resize分别会在 Init, Show, Sync 和 mainLoop中resizeQ 被调用
+  ```go
+    func (t *tScreen) resize() {
+        if w, h, e := t.tty.WindowSize(); e == nil {
+            if w != t.w || h != t.h {
+                t.cx = -1
+                t.cy = -1
+    
+                t.cells.Resize(w, h)
+                t.cells.Invalidate()
+                t.h = h
+                t.w = w
+                ev := NewEventResize(w, h)
+                _ = t.PostEvent(ev)
+            }
+        }
+    }
+  ```
+3. inputLoop 中 t.tty.Read(chunk) 从终端消息读取失败会推Event
+    ```go
+        n, e := t.tty.Read(chunk)
+        switch e {
+        case nil:
+        default:
+            _ = t.PostEvent(NewEventError(e))
+            return
+        }
+    ```
+4. application 自己主动调用
