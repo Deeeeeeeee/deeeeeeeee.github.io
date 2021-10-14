@@ -1,0 +1,1317 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next mist use-motion" lang="zh-CN">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=6.0.3" rel="stylesheet" type="text/css" />
+
+
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/own/16x16.ico?v=6.0.3">
+
+
+
+
+
+
+
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    version: '6.0.3',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":true},
+    fancybox: true,
+    fastclick: false,
+    lazyload: false,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+  
+
+
+
+
+  
+  <meta name="keywords" content="go,tcell," />
+
+
+<meta property="og:type" content="article">
+<meta property="og:title" content="【go】tcell终端编辑库">
+<meta property="og:url" content="https://deeeeeeeee.github.io/post/go-tcell/index.html">
+<meta property="og:site_name" content="未知">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://deeeeeeeee.github.io/post/go-tcell/tcell.png">
+<meta property="article:published_time" content="2021-10-13T09:00:08.000Z">
+<meta property="article:modified_time" content="2021-10-14T08:59:16.363Z">
+<meta property="article:author" content="seal_de">
+<meta property="article:tag" content="go">
+<meta property="article:tag" content="tcell">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://deeeeeeeee.github.io/post/go-tcell/tcell.png">
+
+
+
+
+
+
+  <link rel="canonical" href="https://deeeeeeeee.github.io/post/go-tcell/"/>
+
+
+
+<script type="text/javascript" id="page.configurations">
+  CONFIG.page = {
+    sidebar: "",
+  };
+</script>
+  <title>【go】tcell终端编辑库 | 未知</title>
+  
+
+
+
+
+
+
+
+
+
+  <noscript>
+  <style type="text/css">
+    .use-motion .motion-element,
+    .use-motion .brand,
+    .use-motion .menu-item,
+    .sidebar-inner,
+    .use-motion .post-block,
+    .use-motion .pagination,
+    .use-motion .comments,
+    .use-motion .post-header,
+    .use-motion .post-body,
+    .use-motion .collection-title { opacity: initial; }
+
+    .use-motion .logo,
+    .use-motion .site-title,
+    .use-motion .site-subtitle {
+      opacity: initial;
+      top: initial;
+    }
+
+    .use-motion {
+      .logo-line-before i { left: initial; }
+      .logo-line-after i { right: initial; }
+    }
+  </style>
+</noscript>
+
+<meta name="generator" content="Hexo 4.2.1"></head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"> <div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">未知</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">biu~biu~biu~</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/index.html" rel="section">
+            <i class="menu-item-icon fa fa-fw fa-th"></i> <br />分类</a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/index.html" rel="section">
+            <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />归档</a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/index.html" rel="section">
+            <i class="menu-item-icon fa fa-fw fa-user"></i> <br />关于</a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br />搜索</a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off"
+             placeholder="搜索..." spellcheck="false"
+             type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+  
+
+
+
+ </div>
+    </header>
+
+    
+  
+  
+  
+    
+      
+    
+    <a href="https://github.com/Deeeeeeeee" class="github-corner" target="_blank" title="Follow me on GitHub" aria-label="Follow me on GitHub"><svg width="80" height="80" viewBox="0 0 250 250" style="fill:#222; color:#fff; position: absolute; top: 0; border: 0; right: 0;" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg>
+    
+      </a>
+    
+
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://deeeeeeeee.github.io/post/go-tcell/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="seal_de">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/own/avatar.png">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="未知">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">【go】tcell终端编辑库</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2021-10-13T17:00:08+08:00">2021-10-13</time>
+            
+
+            
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/go/" itemprop="url" rel="index"><span itemprop="name">go</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <img src="/post/go-tcell/tcell.png" class="">
+<a id="more"></a>
+<h2 id="简单介绍"><a href="#简单介绍" class="headerlink" title="简单介绍"></a>简单介绍</h2><p><a href="https://github.com/gdamore/tcell" target="_blank" rel="noopener">https://github.com/gdamore/tcell</a></p>
+<p>一个终端编辑库，受termbox启发，目前仍在维护，有不少终端工具在使用，如fzf, termshark, tview。由于打算使用这个库，翻了下代码，整理了一点内容，也方便后面查看</p>
+<h2 id="文件目录"><a href="#文件目录" class="headerlink" title="文件目录"></a>文件目录</h2><figure class="highlight maxima"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br></pre></td><td class="code"><pre><span class="line">.</span><br><span class="line">├── _demos              # <span class="built_in">demo</span></span><br><span class="line">│   └── ...</span><br><span class="line">├── attr.<span class="built_in">go</span></span><br><span class="line">├── cell.<span class="built_in">go</span></span><br><span class="line">├── charset_stub.<span class="built_in">go</span></span><br><span class="line">├── charset_unix.<span class="built_in">go</span></span><br><span class="line">├── charset_windows.<span class="built_in">go</span></span><br><span class="line">├── <span class="built_in">color</span>.<span class="built_in">go</span></span><br><span class="line">├── colorfit.<span class="built_in">go</span></span><br><span class="line">├── console_stub.<span class="built_in">go</span></span><br><span class="line">├── console_win.<span class="built_in">go</span></span><br><span class="line">├── doc.<span class="built_in">go</span></span><br><span class="line">├── encoding            # 编码</span><br><span class="line">│   └── all.<span class="built_in">go</span></span><br><span class="line">├── encoding.<span class="built_in">go</span></span><br><span class="line">├── <span class="built_in">errors</span>.<span class="built_in">go</span></span><br><span class="line">├── event.<span class="built_in">go</span></span><br><span class="line">├── interrupt.<span class="built_in">go</span></span><br><span class="line">├── <span class="built_in">key</span>.<span class="built_in">go</span>              # 键盘事件定义</span><br><span class="line">├── mouse.<span class="built_in">go</span>            # 鼠标事件定义</span><br><span class="line">├── nonblock_bsd.<span class="built_in">go</span></span><br><span class="line">├── nonblock_unix.<span class="built_in">go</span></span><br><span class="line">├── paste.<span class="built_in">go</span></span><br><span class="line">├── resize.<span class="built_in">go</span></span><br><span class="line">├── runes.<span class="built_in">go</span>            # 字符映射定义(不能恰当转换的时候用到)</span><br><span class="line">├── screen.<span class="built_in">go</span>           # screen 接口定义</span><br><span class="line">├── simulation.<span class="built_in">go</span></span><br><span class="line">├── stdin_unix.<span class="built_in">go</span></span><br><span class="line">├── <span class="built_in">style</span>.<span class="built_in">go</span></span><br><span class="line">├── termbox             # termbox 兼容实例</span><br><span class="line">│   └── compat.<span class="built_in">go</span></span><br><span class="line">├── terminfo            # 适配各种终端</span><br><span class="line">│   └── ...</span><br><span class="line">├── terms_default.<span class="built_in">go</span></span><br><span class="line">├── terms_dynamic.<span class="built_in">go</span></span><br><span class="line">├── terms_static.<span class="built_in">go</span></span><br><span class="line">├── tscreen.<span class="built_in">go</span>          # 实际使用的 screen. 重要</span><br><span class="line">├── tscreen_stub.<span class="built_in">go</span></span><br><span class="line">├── tscreen_unix.<span class="built_in">go</span></span><br><span class="line">├── tty.<span class="built_in">go</span>              # 终端操作封装</span><br><span class="line">├── tty_unix.<span class="built_in">go</span></span><br><span class="line">└── views               # 对 tcell 封装</span><br><span class="line">    ├── _demos</span><br><span class="line">    │   └── ...</span><br><span class="line">    ├── app.<span class="built_in">go</span></span><br><span class="line">    ├── boxlayout.<span class="built_in">go</span></span><br><span class="line">    ├── cellarea.<span class="built_in">go</span></span><br><span class="line">    ├── constants.<span class="built_in">go</span></span><br><span class="line">    ├── panel.<span class="built_in">go</span></span><br><span class="line">    ├── spacer.<span class="built_in">go</span></span><br><span class="line">    ├── sstext.<span class="built_in">go</span></span><br><span class="line">    ├── sstextbar.<span class="built_in">go</span></span><br><span class="line">    ├── text.<span class="built_in">go</span></span><br><span class="line">    ├── textarea.<span class="built_in">go</span></span><br><span class="line">    ├── textbar.<span class="built_in">go</span></span><br><span class="line">    ├── <span class="built_in">view</span>.<span class="built_in">go</span></span><br><span class="line">    └── widget.<span class="built_in">go</span></span><br></pre></td></tr></table></figure>
+<h2 id="入口views"><a href="#入口views" class="headerlink" title="入口views"></a>入口views</h2><p>views 是 tcell 自己的一层封装，从这里入手开始看。会看到 views/app.go 中 run 方法</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(app *Application)</span> <span class="title">run</span><span class="params">()</span></span> &#123;</span><br><span class="line"></span><br><span class="line">    screen := app.screen</span><br><span class="line">    widget := app.widget</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> widget == <span class="literal">nil</span> &#123;</span><br><span class="line">        app.wg.Done()</span><br><span class="line">        <span class="keyword">return</span></span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> screen == <span class="literal">nil</span> &#123;</span><br><span class="line">        <span class="comment">// app 初始化</span></span><br><span class="line">        <span class="keyword">if</span> e := app.initialize(); e != <span class="literal">nil</span> &#123;</span><br><span class="line">            app.wg.Done()</span><br><span class="line">            <span class="keyword">return</span></span><br><span class="line">        &#125;</span><br><span class="line">        screen = app.screen</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">defer</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">        screen.Fini()</span><br><span class="line">        app.wg.Done()</span><br><span class="line">    &#125;()</span><br><span class="line">    <span class="comment">// screen 初始化</span></span><br><span class="line">    screen.Init()</span><br><span class="line">    screen.Clear()</span><br><span class="line">    <span class="comment">// widget 设置 view</span></span><br><span class="line">    widget.SetView(screen)</span><br><span class="line"></span><br><span class="line">loop:</span><br><span class="line">    <span class="keyword">for</span> &#123;</span><br><span class="line">        <span class="keyword">if</span> widget = app.widget; widget == <span class="literal">nil</span> &#123;</span><br><span class="line">            <span class="keyword">break</span></span><br><span class="line">        &#125;</span><br><span class="line">        <span class="comment">// draw 和 show</span></span><br><span class="line">        widget.Draw()</span><br><span class="line">        screen.Show()</span><br><span class="line"></span><br><span class="line">        <span class="comment">// screen pollEvent</span></span><br><span class="line">        ev := screen.PollEvent()</span><br><span class="line">        <span class="keyword">switch</span> nev := ev.(<span class="keyword">type</span>) &#123;</span><br><span class="line">        <span class="keyword">case</span> *eventAppQuit:</span><br><span class="line">            <span class="keyword">break</span> loop</span><br><span class="line">        <span class="keyword">case</span> *eventAppUpdate:</span><br><span class="line">            screen.Show()</span><br><span class="line">        <span class="keyword">case</span> *eventAppRefresh:</span><br><span class="line">            screen.Sync()</span><br><span class="line">        <span class="keyword">case</span> *eventAppFunc:</span><br><span class="line">            nev.fn()</span><br><span class="line">        <span class="keyword">case</span> *tcell.EventResize:</span><br><span class="line">            screen.Sync()</span><br><span class="line">            widget.Resize()</span><br><span class="line">        <span class="keyword">default</span>:</span><br><span class="line">            widget.HandleEvent(ev)</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>可以看到有几件事情</p>
+<ul>
+<li>app 初始化</li>
+<li>screen 初始化</li>
+<li>widget 设置 view</li>
+<li>循环<ul>
+<li>draw 和 show</li>
+<li>poollEvent</li>
+<li>处理事件</li>
+</ul>
+</li>
+</ul>
+<h3 id="app-initialize初始化"><a href="#app-initialize初始化" class="headerlink" title="app.initialize初始化"></a>app.initialize初始化</h3><p>views/app.go 中 app.initialize 会调 tscreen.go 下面的方法</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">NewTerminfoScreenFromTty</span><span class="params">(tty Tty)</span> <span class="params">(Screen, error)</span></span> &#123;</span><br><span class="line">    <span class="comment">// 从系统 env 中获取 TERM，然后找到 terminfo</span></span><br><span class="line">    ti, e := terminfo.LookupTerminfo(os.Getenv(<span class="string">"TERM"</span>))</span><br><span class="line">    <span class="keyword">if</span> e != <span class="literal">nil</span> &#123;</span><br><span class="line">        ti, e = loadDynamicTerminfo(os.Getenv(<span class="string">"TERM"</span>))</span><br><span class="line">        <span class="keyword">if</span> e != <span class="literal">nil</span> &#123;</span><br><span class="line">            <span class="keyword">return</span> <span class="literal">nil</span>, e</span><br><span class="line">        &#125;</span><br><span class="line">        terminfo.AddTerminfo(ti)</span><br><span class="line">    &#125;</span><br><span class="line">    t := &amp;tScreen&#123;ti: ti, tty: tty&#125;</span><br><span class="line"></span><br><span class="line">    t.keyexist = <span class="built_in">make</span>(<span class="keyword">map</span>[Key]<span class="keyword">bool</span>)</span><br><span class="line">    t.keycodes = <span class="built_in">make</span>(<span class="keyword">map</span>[<span class="keyword">string</span>]*tKeyCode)</span><br><span class="line">    <span class="keyword">if</span> <span class="built_in">len</span>(ti.Mouse) &gt; <span class="number">0</span> &#123;</span><br><span class="line">        t.mouse = []<span class="keyword">byte</span>(ti.Mouse)</span><br><span class="line">    &#125;</span><br><span class="line">    t.prepareKeys()</span><br><span class="line">    t.buildAcsMap()</span><br><span class="line">    t.resizeQ = <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="keyword">bool</span>, <span class="number">1</span>)                      <span class="comment">// resize chan</span></span><br><span class="line">    t.fallback = <span class="built_in">make</span>(<span class="keyword">map</span>[<span class="keyword">rune</span>]<span class="keyword">string</span>)</span><br><span class="line">    <span class="comment">// 加载字符映射</span></span><br><span class="line">    <span class="keyword">for</span> k, v := <span class="keyword">range</span> RuneFallbacks &#123;</span><br><span class="line">        t.fallback[k] = v</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> t, <span class="literal">nil</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>可以看到有几件事情</p>
+<ul>
+<li>从 env 中获取 TERM 环境变量，然后找 terminfo</li>
+<li>创建 tScreen 实例，并初始化基本字段</li>
+</ul>
+<h2 id="screen-Init方法"><a href="#screen-Init方法" class="headerlink" title="screen.Init方法"></a>screen.Init方法</h2><p>再来看 tscreen.go Init 方法</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(t *tScreen)</span> <span class="title">Init</span><span class="params">()</span> <span class="title">error</span></span> &#123;</span><br><span class="line">    <span class="comment">// 初始化t.tty</span></span><br><span class="line">    <span class="keyword">if</span> e := t.initialize(); e != <span class="literal">nil</span> &#123;</span><br><span class="line">        <span class="keyword">return</span> e</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    t.evch = <span class="built_in">make</span>(<span class="keyword">chan</span> Event, <span class="number">10</span>)                       <span class="comment">// 事件chan</span></span><br><span class="line">    t.keychan = <span class="built_in">make</span>(<span class="keyword">chan</span> []<span class="keyword">byte</span>, <span class="number">10</span>)                   <span class="comment">// 按键chan(包括鼠标)</span></span><br><span class="line">    t.keytimer = time.NewTimer(time.Millisecond * <span class="number">50</span>)   <span class="comment">// 处理按键的定时器</span></span><br><span class="line">    t.charset = <span class="string">"UTF-8"</span></span><br><span class="line"></span><br><span class="line">    t.charset = getCharset()</span><br><span class="line">    <span class="keyword">if</span> enc := GetEncoding(t.charset); enc != <span class="literal">nil</span> &#123;</span><br><span class="line">        t.encoder = enc.NewEncoder()</span><br><span class="line">        t.decoder = enc.NewDecoder()</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="keyword">return</span> ErrNoCharset</span><br><span class="line">    &#125;</span><br><span class="line">    ti := t.ti</span><br><span class="line"></span><br><span class="line">    ...</span><br><span class="line"></span><br><span class="line">    t.colors = <span class="built_in">make</span>(<span class="keyword">map</span>[Color]Color)</span><br><span class="line">    t.palette = <span class="built_in">make</span>([]Color, t.nColors())</span><br><span class="line">    <span class="keyword">for</span> i := <span class="number">0</span>; i &lt; t.nColors(); i++ &#123;</span><br><span class="line">        t.palette[i] = Color(i) | ColorValid</span><br><span class="line">        <span class="comment">// identity map for our builtin colors</span></span><br><span class="line">        t.colors[Color(i)|ColorValid] = Color(i) | ColorValid</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    t.quit = <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="keyword">struct</span>&#123;&#125;)                        <span class="comment">// quit chan</span></span><br><span class="line"></span><br><span class="line">    t.Lock()</span><br><span class="line">    t.cx = <span class="number">-1</span>                                           <span class="comment">// cellbuffer 宽</span></span><br><span class="line">    t.cy = <span class="number">-1</span>                                           <span class="comment">// cellbuffer 高</span></span><br><span class="line">    t.style = StyleDefault</span><br><span class="line">    t.cells.Resize(w, h)</span><br><span class="line">    t.cursorx = <span class="number">-1</span>                                      <span class="comment">// 光标x</span></span><br><span class="line">    t.cursory = <span class="number">-1</span>                                      <span class="comment">// 光标y</span></span><br><span class="line">    t.resize()</span><br><span class="line">    t.Unlock()</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> err := t.engage(); err != <span class="literal">nil</span> &#123;                  <span class="comment">// 终端操作调用</span></span><br><span class="line">        <span class="keyword">return</span> err</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> <span class="literal">nil</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这里干了几件事情</p>
+<ul>
+<li>初始化 tty</li>
+<li>事件、按键chan的初始化，按键定时器</li>
+<li>quit chan初始化</li>
+<li>终端操作调用</li>
+</ul>
+<h3 id="初始化tty"><a href="#初始化tty" class="headerlink" title="初始化tty"></a>初始化tty</h3><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// NewDevTtyFromDev opens a tty device given a path.  This can be useful to bind to other nodes.</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">NewDevTtyFromDev</span><span class="params">(dev <span class="keyword">string</span>)</span> <span class="params">(Tty, error)</span></span> &#123;</span><br><span class="line">    tty := &amp;devTty&#123;</span><br><span class="line">        dev: dev,</span><br><span class="line">        sig: <span class="built_in">make</span>(<span class="keyword">chan</span> os.Signal),                                  <span class="comment">// 接收窗口大小改变信号</span></span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">var</span> err error</span><br><span class="line">    <span class="keyword">if</span> tty.of, err = os.OpenFile(dev, os.O_RDWR, <span class="number">0</span>); err != <span class="literal">nil</span> &#123;   <span class="comment">// 拿到 /dev/tty 的 fd</span></span><br><span class="line">        <span class="keyword">return</span> <span class="literal">nil</span>, err</span><br><span class="line">    &#125;</span><br><span class="line">    tty.fd = <span class="keyword">int</span>(tty.of.Fd())</span><br><span class="line">    <span class="keyword">if</span> !term.IsTerminal(tty.fd) &#123;</span><br><span class="line">        _ = tty.f.Close()</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">nil</span>, errors.New(<span class="string">"not a terminal"</span>)</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> tty.saved, err = term.GetState(tty.fd); err != <span class="literal">nil</span> &#123;</span><br><span class="line">        _ = tty.f.Close()</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">nil</span>, fmt.Errorf(<span class="string">"failed to get state: %w"</span>, err)</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> tty, <span class="literal">nil</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>tty 的初始化有个窗口大小改变的信号处理，后面会用到。另外一个是拿到 terminal 的 fd，已经初始状态，以便 app 退出的时候恢复</p>
+<h3 id="终端操作调用"><a href="#终端操作调用" class="headerlink" title="终端操作调用"></a>终端操作调用</h3><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(t *tScreen)</span> <span class="title">engage</span><span class="params">()</span> <span class="title">error</span></span> &#123;</span><br><span class="line">    t.Lock()</span><br><span class="line">    <span class="keyword">defer</span> t.Unlock()</span><br><span class="line">    <span class="keyword">if</span> t.tty == <span class="literal">nil</span> &#123;</span><br><span class="line">        <span class="keyword">return</span> ErrNoScreen</span><br><span class="line">    &#125;</span><br><span class="line">    t.tty.NotifyResize(<span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;             <span class="comment">// 注册窗口大小改变回调函数</span></span><br><span class="line">        <span class="keyword">select</span> &#123;</span><br><span class="line">        <span class="keyword">case</span> t.resizeQ &lt;- <span class="literal">true</span>:             <span class="comment">// 往 resizeQ 塞数据</span></span><br><span class="line">        <span class="keyword">default</span>:</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;)</span><br><span class="line">    <span class="keyword">if</span> t.running &#123;</span><br><span class="line">        <span class="keyword">return</span> errors.New(<span class="string">"already engaged"</span>)</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> err := t.tty.Start(); err != <span class="literal">nil</span> &#123;   <span class="comment">// tty.Start</span></span><br><span class="line">        <span class="keyword">return</span> err</span><br><span class="line">    &#125;</span><br><span class="line">    t.running = <span class="literal">true</span></span><br><span class="line">    <span class="keyword">if</span> w, h, err := t.tty.WindowSize(); err == <span class="literal">nil</span> &amp;&amp; w != <span class="number">0</span> &amp;&amp; h != <span class="number">0</span> &#123;</span><br><span class="line">        t.cells.Resize(w, h)</span><br><span class="line">    &#125;</span><br><span class="line">    stopQ := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="keyword">struct</span>&#123;&#125;)            <span class="comment">// stop chan</span></span><br><span class="line">    t.stopQ = stopQ</span><br><span class="line">    t.enableMouse(t.mouseFlags)</span><br><span class="line">    t.enablePasting(t.pasteEnabled)</span><br><span class="line"></span><br><span class="line">    ti := t.ti</span><br><span class="line">    t.TPuts(ti.EnterCA)</span><br><span class="line">    t.TPuts(ti.EnterKeypad)</span><br><span class="line">    t.TPuts(ti.HideCursor)</span><br><span class="line">    t.TPuts(ti.EnableAcs)</span><br><span class="line">    t.TPuts(ti.Clear)</span><br><span class="line"></span><br><span class="line">    t.wg.Add(<span class="number">2</span>)</span><br><span class="line">    <span class="keyword">go</span> t.inputLoop(stopQ)                   <span class="comment">// 输入循环</span></span><br><span class="line">    <span class="keyword">go</span> t.mainLoop(stopQ)                    <span class="comment">// main循环</span></span><br><span class="line">    <span class="keyword">return</span> <span class="literal">nil</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>干了几件事情</p>
+<ul>
+<li>注册窗口大小改变回调函数<ul>
+<li>函数注册到了 tty.cb 中</li>
+</ul>
+</li>
+<li>tty.Start()</li>
+<li>stop chan 初始化</li>
+<li>输入处理循环</li>
+<li>main循环</li>
+</ul>
+<h4 id="tty-Start-方法"><a href="#tty-Start-方法" class="headerlink" title="tty.Start()方法"></a>tty.Start()方法</h4><p>tty.Start() 在 tty_unis.go 中</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(tty *devTty)</span> <span class="title">Start</span><span class="params">()</span> <span class="title">error</span></span> &#123;</span><br><span class="line">    tty.l.Lock()</span><br><span class="line">    <span class="keyword">defer</span> tty.l.Unlock()</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 这里重新获取了一遍dev的fd，说是macOS有bug</span></span><br><span class="line">    <span class="keyword">var</span> err error</span><br><span class="line">    <span class="keyword">if</span> tty.f, err = os.OpenFile(tty.dev, os.O_RDWR, <span class="number">0</span>); err != <span class="literal">nil</span> &#123;</span><br><span class="line">        <span class="keyword">return</span> err</span><br><span class="line">    &#125;</span><br><span class="line">    tty.fd = <span class="keyword">int</span>(tty.of.Fd())</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> !term.IsTerminal(tty.fd) &#123;</span><br><span class="line">        <span class="keyword">return</span> errors.New(<span class="string">"device is not a terminal"</span>)</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    _ = tty.f.SetReadDeadline(time.Time&#123;&#125;)</span><br><span class="line">    saved, err := term.MakeRaw(tty.fd) <span class="comment">// also sets vMin and vTime</span></span><br><span class="line">    <span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">        <span class="keyword">return</span> err</span><br><span class="line">    &#125;</span><br><span class="line">    tty.saved = saved</span><br><span class="line"></span><br><span class="line">    tty.stopQ = <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="keyword">struct</span>&#123;&#125;)             <span class="comment">// stop chan</span></span><br><span class="line">    tty.wg.Add(<span class="number">1</span>)</span><br><span class="line">    <span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">(stopQ <span class="keyword">chan</span> <span class="keyword">struct</span>&#123;&#125;)</span></span> &#123;              <span class="comment">// 起了个go程，处理窗口大小改变信息</span></span><br><span class="line">        <span class="keyword">defer</span> tty.wg.Done()</span><br><span class="line">        <span class="keyword">for</span> &#123;</span><br><span class="line">            <span class="keyword">select</span> &#123;</span><br><span class="line">            <span class="keyword">case</span> &lt;-tty.sig:</span><br><span class="line">                tty.l.Lock()</span><br><span class="line">                cb := tty.cb</span><br><span class="line">                tty.l.Unlock()</span><br><span class="line">                <span class="keyword">if</span> cb != <span class="literal">nil</span> &#123;</span><br><span class="line">                    cb()</span><br><span class="line">                &#125;</span><br><span class="line">            <span class="keyword">case</span> &lt;-stopQ:</span><br><span class="line">                <span class="keyword">return</span></span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;(tty.stopQ)</span><br><span class="line"></span><br><span class="line">    signal.Notify(tty.sig, syscall.SIGWINCH)    <span class="comment">// 向系统注册窗口大小改变信号</span></span><br><span class="line">    <span class="keyword">return</span> <span class="literal">nil</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>干了几件事情：</p>
+<ul>
+<li>初始化 tty.stopQ 管道</li>
+<li>起了个go程，处理窗口大小改变信息<ul>
+<li>select 两个管道 stopQ 和 tty.sig</li>
+<li>执行了回调函数</li>
+</ul>
+</li>
+<li>注册窗口大小改变回调函数</li>
+</ul>
+<h4 id="inputLoop输入处理"><a href="#inputLoop输入处理" class="headerlink" title="inputLoop输入处理"></a>inputLoop输入处理</h4><p>再来看看 inputLoop 方法</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(t *tScreen)</span> <span class="title">inputLoop</span><span class="params">(stopQ <span class="keyword">chan</span> <span class="keyword">struct</span>&#123;&#125;)</span></span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">defer</span> t.wg.Done()</span><br><span class="line">    <span class="keyword">for</span> &#123;</span><br><span class="line">        <span class="keyword">select</span> &#123;</span><br><span class="line">        <span class="keyword">case</span> &lt;-stopQ:</span><br><span class="line">            <span class="keyword">return</span></span><br><span class="line">        <span class="keyword">default</span>:</span><br><span class="line">        &#125;</span><br><span class="line">        chunk := <span class="built_in">make</span>([]<span class="keyword">byte</span>, <span class="number">128</span>)</span><br><span class="line">        n, e := t.tty.Read(chunk)               <span class="comment">// 从tty的fd读数据</span></span><br><span class="line">        <span class="keyword">switch</span> e &#123;</span><br><span class="line">        <span class="keyword">case</span> <span class="literal">nil</span>:</span><br><span class="line">        <span class="keyword">default</span>:</span><br><span class="line">            _ = t.PostEvent(NewEventError(e))</span><br><span class="line">            <span class="keyword">return</span></span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">if</span> n &gt; <span class="number">0</span> &#123;</span><br><span class="line">            t.keychan &lt;- chunk[:n]              <span class="comment">// 将读取得数据送到keychan</span></span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>干了几件事情：</p>
+<ul>
+<li>从tty的fd读数据</li>
+<li>将数据送到keychan</li>
+</ul>
+<h4 id="mainLoop主循环"><a href="#mainLoop主循环" class="headerlink" title="mainLoop主循环"></a>mainLoop主循环</h4><p>再来看看 mainLoop 方法</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(t *tScreen)</span> <span class="title">mainLoop</span><span class="params">(stopQ <span class="keyword">chan</span> <span class="keyword">struct</span>&#123;&#125;)</span></span> &#123;</span><br><span class="line">    <span class="keyword">defer</span> t.wg.Done()</span><br><span class="line">    buf := &amp;bytes.Buffer&#123;&#125;</span><br><span class="line">    <span class="keyword">for</span> &#123;</span><br><span class="line">        <span class="keyword">select</span> &#123;</span><br><span class="line">        <span class="keyword">case</span> &lt;-stopQ:                               <span class="comment">// screen 的 stopQ</span></span><br><span class="line">            <span class="keyword">return</span></span><br><span class="line">        <span class="keyword">case</span> &lt;-t.quit:                              <span class="comment">// screen 的 quit</span></span><br><span class="line">            <span class="keyword">return</span></span><br><span class="line">        <span class="keyword">case</span> &lt;-t.resizeQ:                           <span class="comment">// tty 接收窗口大小改变信号的消息</span></span><br><span class="line">            t.Lock()</span><br><span class="line">            t.cx = <span class="number">-1</span></span><br><span class="line">            t.cy = <span class="number">-1</span></span><br><span class="line">            t.resize()</span><br><span class="line">            t.cells.Invalidate()</span><br><span class="line">            t.draw()</span><br><span class="line">            t.Unlock()</span><br><span class="line">            <span class="keyword">continue</span></span><br><span class="line">        <span class="keyword">case</span> &lt;-t.keytimer.C:                        <span class="comment">// 定时处理50ms</span></span><br><span class="line">            <span class="comment">// If the timer fired, and the current time</span></span><br><span class="line">            <span class="comment">// is after the expiration of the escape sequence,</span></span><br><span class="line">            <span class="comment">// then we assume the escape sequence reached it's</span></span><br><span class="line">            <span class="comment">// conclusion, and process the chunk independently.</span></span><br><span class="line">            <span class="comment">// This lets us detect conflicts such as a lone ESC.</span></span><br><span class="line">            <span class="keyword">if</span> buf.Len() &gt; <span class="number">0</span> &#123;</span><br><span class="line">                <span class="keyword">if</span> time.Now().After(t.keyexpire) &#123;</span><br><span class="line">                    t.scanInput(buf, <span class="literal">true</span>)</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">if</span> buf.Len() &gt; <span class="number">0</span> &#123;</span><br><span class="line">                <span class="keyword">if</span> !t.keytimer.Stop() &#123;</span><br><span class="line">                    <span class="keyword">select</span> &#123;</span><br><span class="line">                    <span class="keyword">case</span> &lt;-t.keytimer.C:</span><br><span class="line">                    <span class="keyword">default</span>:</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;</span><br><span class="line">                t.keytimer.Reset(time.Millisecond * <span class="number">50</span>)</span><br><span class="line">            &#125;</span><br><span class="line">        <span class="keyword">case</span> chunk := &lt;-t.keychan:                  <span class="comment">// kechan事件处理</span></span><br><span class="line">            buf.Write(chunk)</span><br><span class="line">            t.keyexpire = time.Now().Add(time.Millisecond * <span class="number">50</span>)</span><br><span class="line">            t.scanInput(buf, <span class="literal">false</span>)                 <span class="comment">// 从buf读数据，处理成事件推到t.evch中(可能会阻塞)</span></span><br><span class="line">            <span class="keyword">if</span> !t.keytimer.Stop() &#123;                 <span class="comment">// 主动停timer</span></span><br><span class="line">                <span class="keyword">select</span> &#123;</span><br><span class="line">                <span class="keyword">case</span> &lt;-t.keytimer.C:</span><br><span class="line">                <span class="keyword">default</span>:</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">if</span> buf.Len() &gt; <span class="number">0</span> &#123;                      <span class="comment">// 如果buf还有数据，起50ms定时器</span></span><br><span class="line">                t.keytimer.Reset(time.Millisecond * <span class="number">50</span>)</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>干了几件事情：</p>
+<ul>
+<li>接收 stopQ 和 quit 消息，终止循环</li>
+<li>处理窗口大小改变信号过来的消息</li>
+<li>定时处理<ul>
+<li>keychan接收的输入可能不完整，超过 50ms 直接处理</li>
+<li>超时的情况直接将符号推到evch中(让app来处理)</li>
+</ul>
+</li>
+<li>kechan事件处理<ul>
+<li>将keychan的消息写到buf</li>
+<li>设置过期时间</li>
+<li>从buf读数据，处理成事件推到t.evch中</li>
+<li>主动停timer，如果buf还有数据，说明buf数据有未完全数据，需要起50ms定时去看超过时间还没有keychan消息的情况</li>
+</ul>
+</li>
+</ul>
+<h4 id="scanInput方法"><a href="#scanInput方法" class="headerlink" title="scanInput方法"></a>scanInput方法</h4><p>处理buf的符号成对应的事件，发送到 t.evch 中</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(t *tScreen)</span> <span class="title">scanInput</span><span class="params">(buf *bytes.Buffer, expire <span class="keyword">bool</span>)</span></span> &#123;</span><br><span class="line">    evs := t.collectEventsFromInput(buf, expire)</span><br><span class="line"></span><br><span class="line">    <span class="keyword">for</span> _, ev := <span class="keyword">range</span> evs &#123;</span><br><span class="line">        t.PostEventWait(ev)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="screen-PollEvent方法"><a href="#screen-PollEvent方法" class="headerlink" title="screen.PollEvent方法"></a>screen.PollEvent方法</h2><p>再来看看事件这一部分，在 views/app.go 主循环中，不停地 PollEvent 事件出来处理。PostEvent 方法在 tscreen.go 中</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(t *tScreen)</span> <span class="title">PollEvent</span><span class="params">()</span> <span class="title">Event</span></span> &#123;</span><br><span class="line">    <span class="keyword">select</span> &#123;</span><br><span class="line">    <span class="keyword">case</span> &lt;-t.quit:</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">nil</span></span><br><span class="line">    <span class="keyword">case</span> ev := &lt;-t.evch:</span><br><span class="line">        <span class="keyword">return</span> ev</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>可以看到就是一直从 t.evch chan 中拿事件</p>
+<h3 id="PostEvent方法"><a href="#PostEvent方法" class="headerlink" title="PostEvent方法"></a>PostEvent方法</h3><p>PostEvent 分两种，一种 PostEventWait 是如果 t.evch 满了，会阻塞直到能 Post；另一种 PostEvent 是直接发数据到 t.evch，如果满了就返回 Full 错误</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(t *tScreen)</span> <span class="title">PostEventWait</span><span class="params">(ev Event)</span></span> &#123;</span><br><span class="line">    t.evch &lt;- ev</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(t *tScreen)</span> <span class="title">PostEvent</span><span class="params">(ev Event)</span> <span class="title">error</span></span> &#123;</span><br><span class="line">    <span class="keyword">select</span> &#123;</span><br><span class="line">    <span class="keyword">case</span> t.evch &lt;- ev:</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">nil</span></span><br><span class="line">    <span class="keyword">default</span>:</span><br><span class="line">        <span class="keyword">return</span> ErrEventQFull</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="触发时机"><a href="#触发时机" class="headerlink" title="触发时机"></a>触发时机</h3><ol>
+<li>scanInput 的时候。即从终端读完 keychan 消息处理成事件后</li>
+<li>resize 的时候。而resize分别会在 Init, Show, Sync 和 mainLoop中resizeQ 被调用<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(t *tScreen)</span> <span class="title">resize</span><span class="params">()</span></span> &#123;</span><br><span class="line">    <span class="keyword">if</span> w, h, e := t.tty.WindowSize(); e == <span class="literal">nil</span> &#123;</span><br><span class="line">        <span class="keyword">if</span> w != t.w || h != t.h &#123;</span><br><span class="line">            t.cx = <span class="number">-1</span></span><br><span class="line">            t.cy = <span class="number">-1</span></span><br><span class="line"></span><br><span class="line">            t.cells.Resize(w, h)</span><br><span class="line">            t.cells.Invalidate()</span><br><span class="line">            t.h = h</span><br><span class="line">            t.w = w</span><br><span class="line">            ev := NewEventResize(w, h)</span><br><span class="line">            _ = t.PostEvent(ev)</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
+<li>inputLoop 中 t.tty.Read(chunk) 从终端消息读取失败会推Event <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">n, e := t.tty.Read(chunk)</span><br><span class="line"><span class="keyword">switch</span> e &#123;</span><br><span class="line"><span class="keyword">case</span> <span class="literal">nil</span>:</span><br><span class="line"><span class="keyword">default</span>:</span><br><span class="line">    _ = t.PostEvent(NewEventError(e))</span><br><span class="line">    <span class="keyword">return</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
+<li>application 自己主动调用</li>
+</ol>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/go/" rel="tag"># go</a>
+          
+            <a href="/tags/tcell/" rel="tag"># tcell</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/post/wsl2-proxy/" rel="next" title="wsl2-proxy">
+                <i class="fa fa-chevron-left"></i> wsl2-proxy
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+      <div id="sidebar-dimmer"></div>
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image"
+                src="/images/own/avatar.png"
+                alt="seal_de" />
+            
+              <p class="site-author-name" itemprop="name">seal_de</p>
+              <p class="site-description motion-element" itemprop="description">biu~biu~biu~</p>
+          </div>
+
+          
+            <nav class="site-state motion-element">
+              
+                <div class="site-state-item site-state-posts">
+                
+                  <a href="/archives/index.html%7C%7C%20archive">
+                
+                    <span class="site-state-item-count">25</span>
+                    <span class="site-state-item-name">日志</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-categories">
+                  <a href="/categories/index.html">
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">10</span>
+                    <span class="site-state-item-name">分类</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-tags">
+                  <a href="/tags/index.html">
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">27</span>
+                    <span class="site-state-item-name">标签</span>
+                  </a>
+                </div>
+              
+            </nav>
+          
+
+          
+
+          
+            <div class="links-of-author motion-element">
+              
+                <span class="links-of-author-item">
+                  <a href="https://github.com/Deeeeeeeee" target="_blank" title="GitHub"><i class="fa fa-fw fa-github"></i>GitHub</a>
+                  
+                </span>
+              
+                <span class="links-of-author-item">
+                  <a href="mailto:seal.de@foxmail.com" target="_blank" title="E-Mail"><i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+                  
+                </span>
+              
+                <span class="links-of-author-item">
+                  <a href="https://segmentfault.com/u/seal_de" target="_blank" title="SF"><i class="fa fa-fw fa-stop"></i>SF</a>
+                  
+                </span>
+              
+            </div>
+          
+
+          
+          
+
+          
+          
+            <div class="links-of-blogroll motion-element links-of-blogroll-block">
+              <div class="links-of-blogroll-title">
+                <i class="fa  fa-fw fa-link"></i>
+                大佬链接
+              </div>
+              <ul class="links-of-blogroll-list">
+                
+                  <li class="links-of-blogroll-item">
+                    <a href="https://tankeryang.github.io/" title="淦-tankeryang的博客" target="_blank">淦-tankeryang的博客</a>
+                  </li>
+                
+              </ul>
+            </div>
+          
+
+          
+            
+          
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#简单介绍"><span class="nav-number">1.</span> <span class="nav-text">简单介绍</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#文件目录"><span class="nav-number">2.</span> <span class="nav-text">文件目录</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#入口views"><span class="nav-number">3.</span> <span class="nav-text">入口views</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#app-initialize初始化"><span class="nav-number">3.1.</span> <span class="nav-text">app.initialize初始化</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#screen-Init方法"><span class="nav-number">4.</span> <span class="nav-text">screen.Init方法</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#初始化tty"><span class="nav-number">4.1.</span> <span class="nav-text">初始化tty</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#终端操作调用"><span class="nav-number">4.2.</span> <span class="nav-text">终端操作调用</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#tty-Start-方法"><span class="nav-number">4.2.1.</span> <span class="nav-text">tty.Start()方法</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#inputLoop输入处理"><span class="nav-number">4.2.2.</span> <span class="nav-text">inputLoop输入处理</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#mainLoop主循环"><span class="nav-number">4.2.3.</span> <span class="nav-text">mainLoop主循环</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#scanInput方法"><span class="nav-number">4.2.4.</span> <span class="nav-text">scanInput方法</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#screen-PollEvent方法"><span class="nav-number">5.</span> <span class="nav-text">screen.PollEvent方法</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#PostEvent方法"><span class="nav-number">5.1.</span> <span class="nav-text">PostEvent方法</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#触发时机"><span class="nav-number">5.2.</span> <span class="nav-text">触发时机</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">seal_de</span>
+
+  
+
+  
+</div>
+
+
+
+
+  <div class="powered-by">由 <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a> 强力驱动</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 &mdash; <a class="theme-link" target="_blank" href="https://github.com/theme-next/hexo-theme-next">NexT.Mist</a> v6.0.3</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=6.0.3"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=6.0.3"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=6.0.3"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=6.0.3"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=6.0.3"></script>
+
+
+
+  
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+  <script type="text/javascript" src="/js/src/js.cookie.js?v=6.0.3"></script>
+  <script type="text/javascript" src="/js/src/scroll-cookie.js?v=6.0.3"></script>
+
+
+  
+  <script type="text/javascript" src="/js/src/exturl.js?v=6.0.3"></script>
+
+
+  
+
+</body>
+</html>

@@ -1,0 +1,1297 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next mist use-motion" lang="zh-CN">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=6.0.3" rel="stylesheet" type="text/css" />
+
+
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/own/16x16.ico?v=6.0.3">
+
+
+
+
+
+
+
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    version: '6.0.3',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":true},
+    fancybox: true,
+    fastclick: false,
+    lazyload: false,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+  
+
+
+
+
+  
+  <meta name="keywords" content="redis," />
+
+
+<meta name="description" content="概要最近晚霞特别好看，红成一片。今天我们聊一下 redis 提供的工具和功能，在我们使用 redis 过程中好有个什么时候可以借助工具帮住我们，所以今天我们聊一下  redis-cli &amp; redis-server 慢查询 redis-benchmark 压测工具 pipeline 管道 弱事务 lua 原子操作 发布订阅 其他功能">
+<meta property="og:type" content="article">
+<meta property="og:title" content="【系统学习-redis】【二】工具和提供的功能">
+<meta property="og:url" content="https://deeeeeeeee.github.io/post/sys-learn-redis-02/index.html">
+<meta property="og:site_name" content="未知">
+<meta property="og:description" content="概要最近晚霞特别好看，红成一片。今天我们聊一下 redis 提供的工具和功能，在我们使用 redis 过程中好有个什么时候可以借助工具帮住我们，所以今天我们聊一下  redis-cli &amp; redis-server 慢查询 redis-benchmark 压测工具 pipeline 管道 弱事务 lua 原子操作 发布订阅 其他功能">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2019-11-01T08:50:23.000Z">
+<meta property="article:modified_time" content="2021-10-13T08:59:00.584Z">
+<meta property="article:author" content="seal_de">
+<meta property="article:tag" content="redis">
+<meta name="twitter:card" content="summary">
+
+
+
+
+
+
+  <link rel="canonical" href="https://deeeeeeeee.github.io/post/sys-learn-redis-02/"/>
+
+
+
+<script type="text/javascript" id="page.configurations">
+  CONFIG.page = {
+    sidebar: "",
+  };
+</script>
+  <title>【系统学习-redis】【二】工具和提供的功能 | 未知</title>
+  
+
+
+
+
+
+
+
+
+
+  <noscript>
+  <style type="text/css">
+    .use-motion .motion-element,
+    .use-motion .brand,
+    .use-motion .menu-item,
+    .sidebar-inner,
+    .use-motion .post-block,
+    .use-motion .pagination,
+    .use-motion .comments,
+    .use-motion .post-header,
+    .use-motion .post-body,
+    .use-motion .collection-title { opacity: initial; }
+
+    .use-motion .logo,
+    .use-motion .site-title,
+    .use-motion .site-subtitle {
+      opacity: initial;
+      top: initial;
+    }
+
+    .use-motion {
+      .logo-line-before i { left: initial; }
+      .logo-line-after i { right: initial; }
+    }
+  </style>
+</noscript>
+
+<meta name="generator" content="Hexo 4.2.1"></head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"> <div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">未知</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">biu~biu~biu~</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/index.html" rel="section">
+            <i class="menu-item-icon fa fa-fw fa-th"></i> <br />分类</a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/index.html" rel="section">
+            <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />归档</a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/index.html" rel="section">
+            <i class="menu-item-icon fa fa-fw fa-user"></i> <br />关于</a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br />搜索</a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off"
+             placeholder="搜索..." spellcheck="false"
+             type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+  
+
+
+
+ </div>
+    </header>
+
+    
+  
+  
+  
+    
+      
+    
+    <a href="https://github.com/Deeeeeeeee" class="github-corner" target="_blank" title="Follow me on GitHub" aria-label="Follow me on GitHub"><svg width="80" height="80" viewBox="0 0 250 250" style="fill:#222; color:#fff; position: absolute; top: 0; border: 0; right: 0;" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg>
+    
+      </a>
+    
+
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://deeeeeeeee.github.io/post/sys-learn-redis-02/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="seal_de">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/own/avatar.png">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="未知">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">【系统学习-redis】【二】工具和提供的功能</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-11-01T16:50:23+08:00">2019-11-01</time>
+            
+
+            
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/redis%E5%AD%A6%E4%B9%A0/" itemprop="url" rel="index"><span itemprop="name">redis学习</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h2 id="概要"><a href="#概要" class="headerlink" title="概要"></a>概要</h2><p>最近晚霞特别好看，红成一片。今天我们聊一下 redis 提供的工具和功能，在我们使用 redis 过程中好有个什么时候可以借助工具帮住我们，所以今天我们聊一下</p>
+<ul>
+<li>redis-cli &amp; redis-server</li>
+<li>慢查询</li>
+<li>redis-benchmark 压测工具</li>
+<li>pipeline 管道</li>
+<li>弱事务</li>
+<li>lua 原子操作</li>
+<li>发布订阅</li>
+<li>其他功能</li>
+</ul>
+<a id="more"></a>
+<h2 id="redis-cli-amp-redis-server"><a href="#redis-cli-amp-redis-server" class="headerlink" title="redis-cli &amp; redis-server"></a>redis-cli &amp; redis-server</h2><p>redis-cli 是连接 redis 服务的客户端，redis-server 启动 redis 服务。这里我们聊一下常用的命令</p>
+<ul>
+<li>redis-cli<br><code>redis-cli -h 127.0.0.1 -p 6379</code> 连接 redis 数据库，-h 指 host 地址，-p 指端口，默认6379，另外 -a 是密码<br><code>redis-cli -r 10 -i 1 info |grep used_memory_human</code> 查看内存使用情况，每秒输出一次，一共输出 10 次。-r 指重复操作，-i 指在-r参数情况下间隔多长时间，info 查看 redis 信息  <figure class="highlight angelscript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">~ redis-cli -r <span class="number">10</span> -i <span class="number">1</span> info |grep used_memory_human</span><br><span class="line">used_memory_human:<span class="number">821.46</span>K</span><br><span class="line">used_memory_human:<span class="number">821.46</span>K</span><br><span class="line">used_memory_human:<span class="number">821.46</span>K</span><br><span class="line">used_memory_human:<span class="number">821.46</span>K</span><br><span class="line">used_memory_human:<span class="number">821.46</span>K</span><br><span class="line">used_memory_human:<span class="number">821.46</span>K</span><br><span class="line">used_memory_human:<span class="number">821.46</span>K</span><br><span class="line">used_memory_human:<span class="number">821.46</span>K</span><br><span class="line">used_memory_human:<span class="number">821.46</span>K</span><br><span class="line">used_memory_human:<span class="number">821.46</span>K</span><br></pre></td></tr></table></figure>
+<code>redis-cli keys &quot;user:*&quot; | xargs redis-cli del</code> 批量删除 user:* 匹配到的 key</li>
+<li>redis-server<br><code>redis-server ./redis.conf &amp;</code> 指定配置文件启动，<code>&amp;</code> 表示后台运行<br><code>redis-server --test-memory 1024</code> 检测系统能否提供 1G 内存给 redis，用于快速占满机器内存的测试。如果机器不能提供，会发现测试的速度变的很慢</li>
+</ul>
+<p>更多的参数命令参考 <code>redis-cli --help</code> 和　<code>redis-server --help</code></p>
+<h2 id="慢查询"><a href="#慢查询" class="headerlink" title="慢查询"></a>慢查询</h2><p>跟 mysql 一样，当执行时间超过一定的阈值，会将耗时的命令记录起来。由于 redis 是单线程的，所以一条命令如果很耗时，会阻塞住后面的所有命令，我们来看一下怎么设置慢查询的阈值</p>
+<ul>
+<li>动态设置，重启启动设置会丢失。直接在 redis-cli 连接上设置 <code>6379&gt; config set slowlog-log-slower-than 10000</code>，这里设置阈值为 10ms</li>
+<li>配置文件设置。修改配置文件 redis.conf<figure class="highlight livecodeserver"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 设置为 10ms，特别地设置成 0 记录所有的记录，负数不记录</span></span><br><span class="line">slowlog-<span class="built_in">log</span>-slower-than <span class="number">10000</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 设置慢查询记录的条数，慢查询记录也是队列，有一定的条数限制</span></span><br><span class="line">slowlog-<span class="built_in">max</span>-<span class="built_in">len</span> <span class="number">128</span></span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+<p><strong>慢查询使用</strong></p>
+<p><code>slowlog len</code> 显示慢查询条数，<code>slowlog get</code> 获取慢查询命令</p>
+<figure class="highlight angelscript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="number">127.0</span><span class="number">.0</span><span class="number">.1</span>:<span class="number">6379</span>&gt; slowlog len</span><br><span class="line">(<span class="built_in">int</span>eger) <span class="number">1</span></span><br><span class="line"><span class="number">127.0</span><span class="number">.0</span><span class="number">.1</span>:<span class="number">6379</span>&gt; slowlog <span class="keyword">get</span></span><br><span class="line"><span class="number">1</span>) <span class="number">1</span>) (<span class="built_in">int</span>eger) <span class="number">0</span></span><br><span class="line">   <span class="number">2</span>) (<span class="built_in">int</span>eger) <span class="number">1572578366</span></span><br><span class="line">   <span class="number">3</span>) (<span class="built_in">int</span>eger) <span class="number">5</span></span><br><span class="line">   <span class="number">4</span>) <span class="number">1</span>) <span class="string">"get"</span></span><br><span class="line">      <span class="number">2</span>) <span class="string">"name"</span></span><br><span class="line">   <span class="number">5</span>) <span class="string">"127.0.0.1:55444"</span></span><br><span class="line">   <span class="number">6</span>) <span class="string">""</span></span><br></pre></td></tr></table></figure>
+<p>一般生产上设置 slowlog-log-slower-than 为 10ms，如果并发要求高，可以设置 1ms。slowlog-max-len 可以设置上千条。慢查询日志最好写个脚本定期地存放起来，比如放到 mysql 里面</p>
+<h2 id="redis-benchmark-压测工具"><a href="#redis-benchmark-压测工具" class="headerlink" title="redis-benchmark 压测工具"></a>redis-benchmark 压测工具</h2><p>我们通常需要使用压测工具对我们的服务做基准测试，需要知道达到什么阈值下性能会出现问题，测试 redis 有一个官方提供的工具 redis-benchmark。我们先来看看几个例子</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="string">➜</span>  <span class="string">~</span> <span class="string">redis-benchmark</span> <span class="string">-q</span></span><br><span class="line"><span class="attr">PING_INLINE:</span> <span class="number">143884.89</span> <span class="string">requests</span> <span class="string">per</span> <span class="string">second</span></span><br><span class="line"><span class="attr">PING_BULK:</span> <span class="number">143472.02</span> <span class="string">requests</span> <span class="string">per</span> <span class="string">second</span></span><br><span class="line"><span class="attr">SET:</span> <span class="number">141643.06</span> <span class="string">requests</span> <span class="string">per</span> <span class="string">second</span></span><br><span class="line"><span class="attr">GET:</span> <span class="number">145348.83</span> <span class="string">requests</span> <span class="string">per</span> <span class="string">second</span></span><br><span class="line"><span class="attr">INCR:</span> <span class="number">146627.56</span> <span class="string">requests</span> <span class="string">per</span> <span class="string">second</span></span><br><span class="line"><span class="attr">LPUSH:</span> <span class="number">146198.83</span> <span class="string">requests</span> <span class="string">per</span> <span class="string">second</span></span><br><span class="line"><span class="attr">RPUSH:</span> <span class="number">146412.88</span> <span class="string">requests</span> <span class="string">per</span> <span class="string">second</span></span><br><span class="line"><span class="attr">LPOP:</span> <span class="number">146198.83</span> <span class="string">requests</span> <span class="string">per</span> <span class="string">second</span></span><br><span class="line"><span class="attr">RPOP:</span> <span class="number">146412.88</span> <span class="string">requests</span> <span class="string">per</span> <span class="string">second</span></span><br><span class="line"><span class="attr">SADD:</span> <span class="number">146627.56</span> <span class="string">requests</span> <span class="string">per</span> <span class="string">second</span></span><br><span class="line"><span class="attr">HSET:</span> <span class="number">147058.83</span> <span class="string">requests</span> <span class="string">per</span> <span class="string">second</span></span><br><span class="line"><span class="attr">SPOP:</span> <span class="number">146198.83</span> <span class="string">requests</span> <span class="string">per</span> <span class="string">second</span></span><br><span class="line"><span class="string">LPUSH</span> <span class="string">(needed</span> <span class="string">to</span> <span class="string">benchmark</span> <span class="string">LRANGE):</span> <span class="number">147058.83</span> <span class="string">requests</span> <span class="string">per</span> <span class="string">second</span></span><br><span class="line"><span class="string">LRANGE_100</span> <span class="string">(first</span> <span class="number">100</span> <span class="string">elements):</span> <span class="number">89206.06</span> <span class="string">requests</span> <span class="string">per</span> <span class="string">second</span></span><br><span class="line"><span class="string">LRANGE_300</span> <span class="string">(first</span> <span class="number">300</span> <span class="string">elements):</span> <span class="number">35842.29</span> <span class="string">requests</span> <span class="string">per</span> <span class="string">second</span></span><br><span class="line"><span class="string">LRANGE_500</span> <span class="string">(first</span> <span class="number">450</span> <span class="string">elements):</span> <span class="number">24727.99</span> <span class="string">requests</span> <span class="string">per</span> <span class="string">second</span></span><br><span class="line"><span class="string">LRANGE_600</span> <span class="string">(first</span> <span class="number">600</span> <span class="string">elements):</span> <span class="number">18491.12</span> <span class="string">requests</span> <span class="string">per</span> <span class="string">second</span></span><br><span class="line"><span class="string">MSET</span> <span class="string">(10</span> <span class="string">keys):</span> <span class="number">112107.62</span> <span class="string">requests</span> <span class="string">per</span> <span class="string">second</span></span><br></pre></td></tr></table></figure>
+<p>这里是我本机测试，注意生成压测的时候需要加上 host，port 和 pwd，<code>redis-benchmark -q</code> -q 是 quiet 的意思，只输出每秒查询的次数。还可以指定并发数进行测试</p>
+<ul>
+<li><code>redis-benchmark -q -c 1000 -n 100000</code> 1000 个并发连接，每个连接 10w次请求</li>
+<li><code>redis-benchmark -q -d 1000</code> 测试 1000字节 大小数据包的 set/get 情况</li>
+<li><code>redis-benchmark -q -t set,lpush --csv</code> 只测试 set,lpush 的性能，输出为 csv 格式</li>
+<li><code>redis-benchmark -r 10000 -n 10000 eval &#39;return redis.call(&quot;ping&quot;)&#39;</code> 执行脚本语句</li>
+</ul>
+<h2 id="pipeline-管道"><a href="#pipeline-管道" class="headerlink" title="pipeline 管道"></a>pipeline 管道</h2><p>redis 客户端(比如 Jedis)执行一条命令，过程是 发送命令到服务端 -》命令进入队列 -》 服务端执行命令 -》 返回执行结果给客户端，客户端在每执行命令的时候都需要往返的网络开销。pipeline 的作用是一次可以执行多条命令，而不用多次地发送请求，pipeline 的出现就是为了节省网络请求的开销，网络开销的时间可能比服务端执行命令的时间还要长，特别客户端和服务端网络延迟大的情况更明显</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">( String[] args )</span> </span>&#123;</span><br><span class="line">    Jedis jedis = <span class="keyword">new</span> Jedis(<span class="string">"127.0.0.1"</span>, <span class="number">6379</span>);</span><br><span class="line">    Pipeline pipeline = jedis.pipelined();</span><br><span class="line">    pipeline.set(<span class="string">"ptest1"</span>, <span class="string">"t"</span>);</span><br><span class="line">    pipeline.sadd(<span class="string">"pztest1"</span>, <span class="string">"p1"</span>, <span class="string">"p2"</span>, <span class="string">"p3"</span>);</span><br><span class="line">    Response&lt;Long&gt; res = pipeline.dbSize();</span><br><span class="line"></span><br><span class="line">    pipeline.sync();</span><br><span class="line">    System.out.println(res.get());</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>在客户端使用 pipeline 比如 Jedis，将一组命令组装起来，发送给 redis 服务端，完成批量操作，其实发送的就是根据 resp 协议组装出来的文本。其实原生命令也有批量操作的，比如 <code>mset</code>、<code>hmset</code> 等，他们的区别</p>
+<ul>
+<li>原生批命令是原子的，pipeline 不具有原子性</li>
+<li>原生批命令只能单一的操作，pipeline 可以有多条不同的命令</li>
+<li>原生批命令是服务端实现的，pipeline 是需要服务端和客户端共同完成的</li>
+</ul>
+<p>一般我们使用 pipeline 需要主要组装的命令不能太多，因为 redis 单线程的关系，有阻塞其他命令的风险。如果有大量的命令需要执行，可以拆分成多个小的 pipeline 去执行。pipeline 还可以结合 redis 的事务执行命令，即将命令放在 <code>multi</code> 和 <code>exec</code> 之间执行，<code>multi</code> 指事务开启，<code>exec</code> 指事务结束</p>
+<h2 id="弱事务"><a href="#弱事务" class="headerlink" title="弱事务"></a>弱事务</h2><p>redis 提供的事务是弱事务性的，我们看一个例子，这里第二条语句出错了，但是第一条和第三条语句还是执行成功了，这个说明事务没有回滚，这就是弱事务性<br>什么样的情况会回滚呢，比如这里第二条语句是 <code>ssdfa</code> 这样的语法错误，那么事务直接失败，语句不执行了，或者 <code>discard</code> 显示停止提交事务</p>
+<figure class="highlight accesslog"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="number">127.0.0.1:6379</span>&gt; multi</span><br><span class="line">OK</span><br><span class="line"><span class="number">127.0.0.1:6379</span>&gt; set multi:test ooo</span><br><span class="line">QUEUED</span><br><span class="line"><span class="number">127.0.0.1:6379</span>&gt; zincrby multi:test q notexists</span><br><span class="line">QUEUED</span><br><span class="line"><span class="number">127.0.0.1:6379</span>&gt; set multi:not ppp</span><br><span class="line">QUEUED</span><br><span class="line"><span class="number">127.0.0.1:6379</span>&gt; exec</span><br><span class="line"><span class="number">1</span>) OK</span><br><span class="line"><span class="number">2</span>) (error) ERR value is not a valid float</span><br><span class="line"><span class="number">3</span>) OK</span><br><span class="line"><span class="number">127.0.0.1:6379</span>&gt; get multi:test</span><br><span class="line"><span class="string">"ooo"</span></span><br></pre></td></tr></table></figure>
+<h2 id="lua-原子操作"><a href="#lua-原子操作" class="headerlink" title="lua 原子操作"></a>lua 原子操作</h2><p>lua 是一门小巧的脚本语言，用 C 语言写的，速度很快。redis 可以将 lua 脚本加载到内存中，然后调用 lua 脚本。使用 lua 脚本有以下几个好处：</p>
+<ul>
+<li>减少网络开销</li>
+<li>原子操作</li>
+<li>复用性</li>
+</ul>
+<p>这里不对 lua 语言的语法进行讨论，我们先来看一个简单的例子。这里通过 <code>redis.call</code> 调用 redis 的命令，通过 <code>KEYS[1]</code> 获取到参数，1 表示第一个参数</p>
+<figure class="highlight accesslog"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="number">127.0.0.1:6379</span>&gt; set name sealde</span><br><span class="line">OK</span><br><span class="line">// eval + 脚本 + 键个数 + 键</span><br><span class="line"><span class="number">127.0.0.1:6379</span>&gt; eval <span class="string">"return redis.call('get',KEYS[1])"</span> <span class="number">1</span> name</span><br><span class="line"><span class="string">"sealde"</span></span><br></pre></td></tr></table></figure>
+<h3 id="redis-lua脚本管理"><a href="#redis-lua脚本管理" class="headerlink" title="redis lua脚本管理"></a>redis lua脚本管理</h3><ul>
+<li><code>script load &quot;具体的脚本&quot;</code> 将脚本加载到 redis 中，会返回 sha 签名</li>
+<li><code>evalsha sha1 numkeys key [key ...] arg [arg ...]</code> 执行 sha1 脚本，numkeys 指 key 的数量</li>
+<li><code>script exists sha1</code> 判断脚本是否存在</li>
+<li><code>script kill</code> 停止正在运行的脚本</li>
+<li><code>script flush</code> 清空 redis 存储的脚本</li>
+</ul>
+<p>我们接下来看一个例子，这里我们写好一个 lua 脚本 <code>accesslimit.lua</code>，它的功能是限制同一个 ip 一定时间内访问次数，其中 KEYS[1] 指 ip 地址，KEYS[2] 指限制访问的次数，KEYS[3] 指过期时间。可以看到，<code>script load</code> 将脚本加载到 redis 并返回了 sha1，然后通过 <code>evalsha sha1 numkeys key ...</code> 执行该脚本<br>效果是，刚开始 2 次访问返回 1，接下来访问返回 0，查过 5 秒后又可以继续访问，是不是挺简单的呀</p>
+<figure class="highlight lsl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><span class="line">➜  lua cat accesslimit.lua </span><br><span class="line">-- KEYS[<span class="number">1</span>] ip</span><br><span class="line">local <span class="type">key</span> = <span class="string">"accesslimit:"</span>..KEYS[<span class="number">1</span>]</span><br><span class="line"></span><br><span class="line">if (redis.call(<span class="string">"exists"</span>, <span class="type">key</span>) == <span class="number">1</span>)</span><br><span class="line">then</span><br><span class="line">    local times = redis.call(<span class="string">"incr"</span>, <span class="type">key</span>)</span><br><span class="line">    -- KEYS[<span class="number">2</span>] limit times</span><br><span class="line">    if (times &gt; tonumber(KEYS[<span class="number">2</span>])) then</span><br><span class="line"> 	return <span class="number">0</span></span><br><span class="line">    end</span><br><span class="line">else</span><br><span class="line">    -- KEYS[<span class="number">3</span>] expire time</span><br><span class="line">    redis.call(<span class="string">"set"</span>, <span class="type">key</span>, <span class="number">1</span>, <span class="string">"EX"</span>, tonumber(KEYS[<span class="number">3</span>]))</span><br><span class="line">end</span><br><span class="line">return <span class="number">1</span></span><br><span class="line">➜  lua redis-cli script load <span class="string">"$(cat $(pwd)/accesslimit.lua)"</span></span><br><span class="line"><span class="string">"ae251809e1e2f5c68bbf6b1196e3568920d5c34c"</span></span><br><span class="line">➜  lua redis-cli evalsha ae251809e1e2f5c68bbf6b1196e3568920d5c34c <span class="number">3</span> <span class="number">127.0</span><span class="number">.0</span><span class="number">.1</span> <span class="number">2</span> <span class="number">5</span></span><br><span class="line">(<span class="type">integer</span>) <span class="number">1</span></span><br><span class="line">➜  lua redis-cli evalsha ae251809e1e2f5c68bbf6b1196e3568920d5c34c <span class="number">3</span> <span class="number">127.0</span><span class="number">.0</span><span class="number">.1</span> <span class="number">2</span> <span class="number">5</span></span><br><span class="line">(<span class="type">integer</span>) <span class="number">1</span></span><br><span class="line">➜  lua redis-cli evalsha ae251809e1e2f5c68bbf6b1196e3568920d5c34c <span class="number">3</span> <span class="number">127.0</span><span class="number">.0</span><span class="number">.1</span> <span class="number">2</span> <span class="number">5</span></span><br><span class="line">(<span class="type">integer</span>) <span class="number">0</span></span><br><span class="line">➜  lua redis-cli evalsha ae251809e1e2f5c68bbf6b1196e3568920d5c34c <span class="number">3</span> <span class="number">127.0</span><span class="number">.0</span><span class="number">.1</span> <span class="number">2</span> <span class="number">5</span></span><br><span class="line">(<span class="type">integer</span>) <span class="number">0</span></span><br><span class="line">➜  lua redis-cli evalsha ae251809e1e2f5c68bbf6b1196e3568920d5c34c <span class="number">3</span> <span class="number">127.0</span><span class="number">.0</span><span class="number">.1</span> <span class="number">2</span> <span class="number">5</span></span><br><span class="line">(<span class="type">integer</span>) <span class="number">0</span></span><br><span class="line">➜  lua redis-cli evalsha ae251809e1e2f5c68bbf6b1196e3568920d5c34c <span class="number">3</span> <span class="number">127.0</span><span class="number">.0</span><span class="number">.1</span> <span class="number">2</span> <span class="number">5</span></span><br><span class="line">(<span class="type">integer</span>) <span class="number">0</span></span><br><span class="line">➜  lua redis-cli evalsha ae251809e1e2f5c68bbf6b1196e3568920d5c34c <span class="number">3</span> <span class="number">127.0</span><span class="number">.0</span><span class="number">.1</span> <span class="number">2</span> <span class="number">5</span></span><br><span class="line">(<span class="type">integer</span>) <span class="number">0</span></span><br><span class="line">➜  lua redis-cli evalsha ae251809e1e2f5c68bbf6b1196e3568920d5c34c <span class="number">3</span> <span class="number">127.0</span><span class="number">.0</span><span class="number">.1</span> <span class="number">2</span> <span class="number">5</span></span><br><span class="line">(<span class="type">integer</span>) <span class="number">0</span></span><br><span class="line">➜  lua redis-cli evalsha ae251809e1e2f5c68bbf6b1196e3568920d5c34c <span class="number">3</span> <span class="number">127.0</span><span class="number">.0</span><span class="number">.1</span> <span class="number">2</span> <span class="number">5</span></span><br><span class="line">(<span class="type">integer</span>) <span class="number">1</span></span><br></pre></td></tr></table></figure>
+<h2 id="发布订阅"><a href="#发布订阅" class="headerlink" title="发布订阅"></a>发布订阅</h2><p>发布订阅即发布一个消息到某个 channel，订阅了该 channel 就可以收到该消息。我们先来看一个例子，这里我们启动了两个 redis-cli 去连接</p>
+<p>订阅者</p>
+<figure class="highlight angelscript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="number">127.0</span><span class="number">.0</span><span class="number">.1</span>:<span class="number">6379</span>&gt; subscribe channel:test</span><br><span class="line">Reading messages... (press Ctrl-C to quit)</span><br><span class="line"><span class="number">1</span>) <span class="string">"subscribe"</span></span><br><span class="line"><span class="number">2</span>) <span class="string">"channel:test"</span></span><br><span class="line"><span class="number">3</span>) (<span class="built_in">int</span>eger) <span class="number">1</span></span><br><span class="line"></span><br><span class="line">-- 当 channel:test 有消息的时候</span><br><span class="line"><span class="number">1</span>) <span class="string">"message"</span></span><br><span class="line"><span class="number">2</span>) <span class="string">"channel:test"</span></span><br><span class="line"><span class="number">3</span>) <span class="string">"hello world!"</span></span><br></pre></td></tr></table></figure>
+<p>发布者</p>
+<figure class="highlight angelscript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="number">127.0</span><span class="number">.0</span><span class="number">.1</span>:<span class="number">6379</span>&gt; publish channel:test <span class="string">"hello world!"</span></span><br><span class="line">(<span class="built_in">int</span>eger) <span class="number">1</span></span><br></pre></td></tr></table></figure>
+<p>最主要的命令就是 <code>publish</code> 和 <code>subscribe</code>，另外还有不同模式的订阅，退订等</p>
+<h2 id="其他功能"><a href="#其他功能" class="headerlink" title="其他功能"></a>其他功能</h2><p>redis 还提供其他功能，虽然今天不聊怎么具体使用或者原理，但是大概聊一下有什么作用，以后有相关的需求可以使用上来</p>
+<ul>
+<li>地理位置(geo)，将经纬度坐标数据存到 redis 中，可以查询坐标之间的距离，查询指定范围内的有序坐标。可以做附近的人，物流等功能</li>
+<li>BitMap 通过二进制位存储状态信息，节省内存。根据偏移量进行设置状态，统计等。可以做活跃用户统计，用户行为统计等功能</li>
+<li>HyperLogLog 通过概率算法统计数据，节省内存，可以统计很大数量级的数据。可以用做访问量，活跃用户等</li>
+</ul>
+<p>好啦，今天就聊到这了，还有很多可以慢慢探索的地方，这里只是浅显的聊一下，下次再聊点其他的</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/redis/" rel="tag"># redis</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/post/sys-learn-redis-01/" rel="next" title="【系统学习-redis】【一】概述和数据结构">
+                <i class="fa fa-chevron-left"></i> 【系统学习-redis】【一】概述和数据结构
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/post/sys-learn-redis-03/" rel="prev" title="【系统学习-redis】【三】高可用和集群">
+                【系统学习-redis】【三】高可用和集群 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+      <div id="sidebar-dimmer"></div>
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image"
+                src="/images/own/avatar.png"
+                alt="seal_de" />
+            
+              <p class="site-author-name" itemprop="name">seal_de</p>
+              <p class="site-description motion-element" itemprop="description">biu~biu~biu~</p>
+          </div>
+
+          
+            <nav class="site-state motion-element">
+              
+                <div class="site-state-item site-state-posts">
+                
+                  <a href="/archives/index.html%7C%7C%20archive">
+                
+                    <span class="site-state-item-count">25</span>
+                    <span class="site-state-item-name">日志</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-categories">
+                  <a href="/categories/index.html">
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">10</span>
+                    <span class="site-state-item-name">分类</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-tags">
+                  <a href="/tags/index.html">
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">27</span>
+                    <span class="site-state-item-name">标签</span>
+                  </a>
+                </div>
+              
+            </nav>
+          
+
+          
+
+          
+            <div class="links-of-author motion-element">
+              
+                <span class="links-of-author-item">
+                  <a href="https://github.com/Deeeeeeeee" target="_blank" title="GitHub"><i class="fa fa-fw fa-github"></i>GitHub</a>
+                  
+                </span>
+              
+                <span class="links-of-author-item">
+                  <a href="mailto:seal.de@foxmail.com" target="_blank" title="E-Mail"><i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+                  
+                </span>
+              
+                <span class="links-of-author-item">
+                  <a href="https://segmentfault.com/u/seal_de" target="_blank" title="SF"><i class="fa fa-fw fa-stop"></i>SF</a>
+                  
+                </span>
+              
+            </div>
+          
+
+          
+          
+
+          
+          
+            <div class="links-of-blogroll motion-element links-of-blogroll-block">
+              <div class="links-of-blogroll-title">
+                <i class="fa  fa-fw fa-link"></i>
+                大佬链接
+              </div>
+              <ul class="links-of-blogroll-list">
+                
+                  <li class="links-of-blogroll-item">
+                    <a href="https://tankeryang.github.io/" title="淦-tankeryang的博客" target="_blank">淦-tankeryang的博客</a>
+                  </li>
+                
+              </ul>
+            </div>
+          
+
+          
+            
+          
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#概要"><span class="nav-number">1.</span> <span class="nav-text">概要</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#redis-cli-amp-redis-server"><span class="nav-number">2.</span> <span class="nav-text">redis-cli &amp; redis-server</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#慢查询"><span class="nav-number">3.</span> <span class="nav-text">慢查询</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#redis-benchmark-压测工具"><span class="nav-number">4.</span> <span class="nav-text">redis-benchmark 压测工具</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#pipeline-管道"><span class="nav-number">5.</span> <span class="nav-text">pipeline 管道</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#弱事务"><span class="nav-number">6.</span> <span class="nav-text">弱事务</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#lua-原子操作"><span class="nav-number">7.</span> <span class="nav-text">lua 原子操作</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#redis-lua脚本管理"><span class="nav-number">7.1.</span> <span class="nav-text">redis lua脚本管理</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#发布订阅"><span class="nav-number">8.</span> <span class="nav-text">发布订阅</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#其他功能"><span class="nav-number">9.</span> <span class="nav-text">其他功能</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">seal_de</span>
+
+  
+
+  
+</div>
+
+
+
+
+  <div class="powered-by">由 <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a> 强力驱动</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 &mdash; <a class="theme-link" target="_blank" href="https://github.com/theme-next/hexo-theme-next">NexT.Mist</a> v6.0.3</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=6.0.3"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=6.0.3"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=6.0.3"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=6.0.3"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=6.0.3"></script>
+
+
+
+  
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+  <script type="text/javascript" src="/js/src/js.cookie.js?v=6.0.3"></script>
+  <script type="text/javascript" src="/js/src/scroll-cookie.js?v=6.0.3"></script>
+
+
+  
+  <script type="text/javascript" src="/js/src/exturl.js?v=6.0.3"></script>
+
+
+  
+
+</body>
+</html>
